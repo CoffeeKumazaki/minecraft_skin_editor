@@ -51,12 +51,12 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a1a2e);
 
-    const camera = new THREE.PerspectiveCamera(45, 200 / 267, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(45, 180 / 220, 0.1, 1000);
     camera.position.z = 40;
     camera.position.y = 5;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(200, 267);
+    renderer.setSize(180, 220);
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -298,10 +298,11 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
   return (
     <div>
       <div ref={containerRef} style={{ cursor: 'grab' }} />
-      <div style={{ display: 'flex', gap: '8px', marginTop: '12px', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'center' }}>
         <button
-          className={`pixel-btn ${autoRotate ? 'active' : ''}`}
+          className={`tool-btn ${autoRotate ? 'active' : ''}`}
           onClick={() => setAutoRotate(!autoRotate)}
+          style={{ width: 'auto', padding: '4px 12px', fontSize: '8px' }}
         >
           {autoRotate ? 'Stop' : 'Rotate'}
         </button>

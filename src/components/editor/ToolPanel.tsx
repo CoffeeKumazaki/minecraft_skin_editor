@@ -7,30 +7,26 @@ interface ToolPanelProps {
   setTool: (tool: Tool) => void;
 }
 
+const TOOLS: { id: Tool; icon: string; label: string }[] = [
+  { id: 'brush', icon: '✏', label: 'Brush' },
+  { id: 'eraser', icon: '◻', label: 'Eraser' },
+  { id: 'eyedropper', icon: '💧', label: 'Picker' },
+];
+
 export function ToolPanel({ tool, setTool }: ToolPanelProps) {
   return (
-    <div>
-      <h3 style={{ fontSize: '10px', marginBottom: '12px', color: '#4ecdc4' }}>TOOLS</h3>
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+    <>
+      {TOOLS.map(({ id, icon, label }) => (
         <button
-          className={`pixel-btn ${tool === 'brush' ? 'active' : ''}`}
-          onClick={() => setTool('brush')}
+          key={id}
+          className={`tool-btn ${tool === id ? 'active' : ''}`}
+          onClick={() => setTool(id)}
+          data-tooltip={label}
+          title={label}
         >
-          Brush
+          {icon}
         </button>
-        <button
-          className={`pixel-btn ${tool === 'eraser' ? 'active' : ''}`}
-          onClick={() => setTool('eraser')}
-        >
-          Eraser
-        </button>
-        <button
-          className={`pixel-btn ${tool === 'eyedropper' ? 'active' : ''}`}
-          onClick={() => setTool('eyedropper')}
-        >
-          Picker
-        </button>
-      </div>
-    </div>
+      ))}
+    </>
   );
 }
