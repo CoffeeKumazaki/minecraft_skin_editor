@@ -11,6 +11,7 @@ interface ConnectedUVEditorProps {
   onPaint: (x: number, y: number, color: Color) => void;
   scale: number;
   selectedColor: Color;
+  secondaryColor: Color;
   tool: Tool;
 }
 
@@ -20,10 +21,12 @@ export function ConnectedUVEditor({
   onPaint,
   scale,
   selectedColor,
+  secondaryColor,
   tool,
 }: ConnectedUVEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
+  const activeButton = useRef<number>(0);
   const { layout } = BODY_PARTS[part];
 
   const drawCanvas = useCallback(() => {
@@ -122,20 +125,22 @@ export function ConnectedUVEditor({
     return null;
   };
 
-  const paint = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const paint = (e: React.MouseEvent<HTMLCanvasElement>, button?: number) => {
     const pixel = getPixelFromEvent(e);
     if (pixel) {
-      onPaint(
-        pixel.skinX,
-        pixel.skinY,
-        tool === 'eraser' ? { r: 0, g: 0, b: 0, a: 0 } : selectedColor
-      );
+      const isRightClick = (button ?? activeButton.current) === 2;
+      const color = tool === 'eraser'
+        ? { r: 0, g: 0, b: 0, a: 0 }
+        : isRightClick ? secondaryColor : selectedColor;
+      onPaint(pixel.skinX, pixel.skinY, color);
     }
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (e.button === 1) return; // Ignore middle button
     isDrawing.current = true;
-    paint(e);
+    activeButton.current = e.button;
+    paint(e, e.button);
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -146,7 +151,10 @@ export function ConnectedUVEditor({
 
   const handleMouseUp = () => {
     isDrawing.current = false;
+    activeButton.current = 0;
   };
+
+  const penCursor = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234ecdc4' stroke-width='2'%3E%3Cpath d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z'/%3E%3C/svg%3E") 0 24, crosshair`;
 
   return (
     <canvas
@@ -157,8 +165,9 @@ export function ConnectedUVEditor({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
+      onContextMenu={(e) => e.preventDefault()}
       style={{
-        cursor: 'crosshair',
+        cursor: penCursor,
         imageRendering: 'pixelated',
         borderRadius: '4px',
       }}

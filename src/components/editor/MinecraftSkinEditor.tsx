@@ -15,6 +15,7 @@ import { BodyPartSelector } from './BodyPartSelector';
 export function MinecraftSkinEditor() {
   const [skinData, setSkinData] = useState<Uint8ClampedArray>(() => createDefaultSkin());
   const [selectedColor, setSelectedColor] = useState<Color>({ r: 255, g: 100, b: 100, a: 255 });
+  const [secondaryColor, setSecondaryColor] = useState<Color>({ r: 255, g: 255, b: 255, a: 255 });
   const [tool, setTool] = useState<Tool>('brush');
   const [selectedPart, setSelectedPart] = useState<BodyPartKey>('head');
   const [autoRotate, setAutoRotate] = useState(true);
@@ -70,7 +71,12 @@ export function MinecraftSkinEditor() {
           width: '220px',
         }}>
           <ToolPanel tool={tool} setTool={setTool} />
-          <ColorPicker selectedColor={selectedColor} setSelectedColor={setSelectedColor} />
+          <ColorPicker
+            selectedColor={selectedColor}
+            setSelectedColor={setSelectedColor}
+            secondaryColor={secondaryColor}
+            setSecondaryColor={setSecondaryColor}
+          />
           <BodyPartSelector selectedPart={selectedPart} setSelectedPart={setSelectedPart} />
 
           <button
@@ -104,6 +110,7 @@ export function MinecraftSkinEditor() {
               onPaint={handlePaint}
               scale={getScale(selectedPart)}
               selectedColor={selectedColor}
+              secondaryColor={secondaryColor}
               tool={tool}
             />
           </div>
