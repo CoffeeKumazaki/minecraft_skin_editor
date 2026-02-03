@@ -9,6 +9,7 @@ interface ConnectedUVEditorProps {
   part: BodyPartKey;
   skinData: Uint8ClampedArray;
   onPaint: (x: number, y: number, color: Color) => void;
+  onStrokeEnd?: () => void;
   scale: number;
   selectedColor: Color;
   secondaryColor: Color;
@@ -19,6 +20,7 @@ export function ConnectedUVEditor({
   part,
   skinData,
   onPaint,
+  onStrokeEnd,
   scale,
   selectedColor,
   secondaryColor,
@@ -150,8 +152,11 @@ export function ConnectedUVEditor({
   };
 
   const handleMouseUp = () => {
-    isDrawing.current = false;
-    activeButton.current = 0;
+    if (isDrawing.current) {
+      isDrawing.current = false;
+      activeButton.current = 0;
+      onStrokeEnd?.();
+    }
   };
 
   const penCursor = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234ecdc4' stroke-width='2'%3E%3Cpath d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z'/%3E%3C/svg%3E") 0 24, crosshair`;

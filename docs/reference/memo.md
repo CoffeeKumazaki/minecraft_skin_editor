@@ -1,0 +1,2 @@
+スポイト機能
+outer layer対応

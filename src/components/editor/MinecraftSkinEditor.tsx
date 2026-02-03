@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { BODY_PARTS } from '@/constants/bodyParts';
 import { SKIN_WIDTH } from '@/constants/skin';
 import { createDefaultSkin } from '@/utils/skinInitializer';
 import { downloadSkin } from '@/utils/exportSkin';
 import { Color, BodyPartKey, Tool } from '@/types';
+import { useHistory } from '@/hooks/useHistory';
 import { ConnectedUVEditor } from './ConnectedUVEditor';
 import { SkinPreview3D } from './SkinPreview3D';
 import { ToolPanel } from './ToolPanel';
@@ -13,12 +14,25 @@ import { ColorPicker } from './ColorPicker';
 import { BodyPartSelector } from './BodyPartSelector';
 
 export function MinecraftSkinEditor() {
-  const [skinData, setSkinData] = useState<Uint8ClampedArray>(() => createDefaultSkin());
+  const initialSkin = useRef<Uint8ClampedArray>(createDefaultSkin());
+  const {
+    state: committedSkinData,
+    set: commitToHistory,
+    undo,
+    redo,
+  } = useHistory<Uint8ClampedArray>(initialSkin.current, { maxHistory: 50 });
+
+  const [skinData, setSkinData] = useState<Uint8ClampedArray>(initialSkin.current);
   const [selectedColor, setSelectedColor] = useState<Color>({ r: 255, g: 100, b: 100, a: 255 });
   const [secondaryColor, setSecondaryColor] = useState<Color>({ r: 255, g: 255, b: 255, a: 255 });
   const [tool, setTool] = useState<Tool>('brush');
   const [selectedPart, setSelectedPart] = useState<BodyPartKey>('head');
   const [autoRotate, setAutoRotate] = useState(true);
+
+  // Sync display state when undo/redo changes committed state
+  useEffect(() => {
+    setSkinData(committedSkinData);
+  }, [committedSkinData]);
 
   const handlePaint = useCallback((x: number, y: number, color: Color) => {
     setSkinData(prev => {
@@ -31,6 +45,35 @@ export function MinecraftSkinEditor() {
       return newData;
     });
   }, []);
+
+  const handleStrokeEnd = useCallback(() => {
+    setSkinData(current => {
+      commitToHistory(current);
+      return current;
+    });
+  }, [commitToHistory]);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const modifier = isMac ? e.metaKey : e.ctrlKey;
+
+      if (modifier && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if (modifier && e.key === 'z' && e.shiftKey) {
+        e.preventDefault();
+        redo();
+      } else if (!isMac && e.ctrlKey && e.key === 'y') {
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
 
   const getScale = (part: BodyPartKey) => {
     const layout = BODY_PARTS[part].layout;
@@ -108,6 +151,7 @@ export function MinecraftSkinEditor() {
               part={selectedPart}
               skinData={skinData}
               onPaint={handlePaint}
+              onStrokeEnd={handleStrokeEnd}
               scale={getScale(selectedPart)}
               selectedColor={selectedColor}
               secondaryColor={secondaryColor}
