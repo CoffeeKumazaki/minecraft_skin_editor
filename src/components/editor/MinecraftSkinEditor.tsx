@@ -53,6 +53,14 @@ export function MinecraftSkinEditor() {
     });
   }, [commitToHistory]);
 
+  const handleColorPicked = useCallback((color: Color, isSecondary: boolean) => {
+    if (isSecondary) {
+      setSecondaryColor(color);
+    } else {
+      setSelectedColor(color);
+    }
+  }, []);
+
   // Keyboard shortcuts for undo/redo
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -152,6 +160,7 @@ export function MinecraftSkinEditor() {
               skinData={skinData}
               onPaint={handlePaint}
               onStrokeEnd={handleStrokeEnd}
+              onColorPicked={handleColorPicked}
               scale={getScale(selectedPart)}
               selectedColor={selectedColor}
               secondaryColor={secondaryColor}

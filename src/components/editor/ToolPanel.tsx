@@ -24,6 +24,12 @@ export function ToolPanel({ tool, setTool }: ToolPanelProps) {
         >
           Eraser
         </button>
+        <button
+          className={`pixel-btn ${tool === 'eyedropper' ? 'active' : ''}`}
+          onClick={() => setTool('eyedropper')}
+        >
+          Picker
+        </button>
       </div>
     </div>
   );

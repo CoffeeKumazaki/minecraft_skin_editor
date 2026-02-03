@@ -10,6 +10,7 @@ interface ConnectedUVEditorProps {
   skinData: Uint8ClampedArray;
   onPaint: (x: number, y: number, color: Color) => void;
   onStrokeEnd?: () => void;
+  onColorPicked?: (color: Color, isSecondary: boolean) => void;
   scale: number;
   selectedColor: Color;
   secondaryColor: Color;
@@ -21,6 +22,7 @@ export function ConnectedUVEditor({
   skinData,
   onPaint,
   onStrokeEnd,
+  onColorPicked,
   scale,
   selectedColor,
   secondaryColor,
@@ -131,6 +133,19 @@ export function ConnectedUVEditor({
     const pixel = getPixelFromEvent(e);
     if (pixel) {
       const isRightClick = (button ?? activeButton.current) === 2;
+
+      if (tool === 'eyedropper') {
+        const idx = (pixel.skinY * SKIN_WIDTH + pixel.skinX) * 4;
+        const pickedColor: Color = {
+          r: skinData[idx],
+          g: skinData[idx + 1],
+          b: skinData[idx + 2],
+          a: skinData[idx + 3],
+        };
+        onColorPicked?.(pickedColor, isRightClick);
+        return;
+      }
+
       const color = tool === 'eraser'
         ? { r: 0, g: 0, b: 0, a: 0 }
         : isRightClick ? secondaryColor : selectedColor;
@@ -160,6 +175,12 @@ export function ConnectedUVEditor({
   };
 
   const penCursor = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234ecdc4' stroke-width='2'%3E%3Cpath d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z'/%3E%3C/svg%3E") 0 24, crosshair`;
+  const eyedropperCursor = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234ecdc4' stroke-width='2'%3E%3Cpath d='m2 22 1-1h3l9-9'/%3E%3Cpath d='M3 21v-3l9-9'/%3E%3Cpath d='m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z'/%3E%3C/svg%3E") 0 24, crosshair`;
+
+  const getCursor = () => {
+    if (tool === 'eyedropper') return eyedropperCursor;
+    return penCursor;
+  };
 
   return (
     <canvas
@@ -172,7 +193,7 @@ export function ConnectedUVEditor({
       onMouseLeave={handleMouseUp}
       onContextMenu={(e) => e.preventDefault()}
       style={{
-        cursor: penCursor,
+        cursor: getCursor(),
         imageRendering: 'pixelated',
         borderRadius: '4px',
       }}
