@@ -4,7 +4,10 @@ import dynamic from 'next/dynamic';
 
 const MinecraftSkinEditor = dynamic(
   () => import('@/components/editor/MinecraftSkinEditor').then(mod => ({ default: mod.MinecraftSkinEditor })),
-  { ssr: false }
+  {
+    ssr: false,
+    loading: () => null
+  }
 );
 
 export default function Home() {
