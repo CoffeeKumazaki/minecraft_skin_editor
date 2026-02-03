@@ -33,7 +33,7 @@ export function MinecraftSkinEditor() {
 
   const getScale = (part: BodyPartKey) => {
     const layout = BODY_PARTS[part].layout;
-    const maxWidth = 320;
+    const maxWidth = 480;
     return Math.floor(maxWidth / layout.width);
   };
 
@@ -118,25 +118,25 @@ export function MinecraftSkinEditor() {
           </div>
         </div>
 
-        {/* Right Panel - 3D Preview */}
-        <div className="pixel-border" style={{
-          background: 'rgba(20, 20, 40, 0.95)',
-          padding: '20px',
-          borderRadius: '8px',
-        }}>
-          <h3 style={{ fontSize: '12px', marginBottom: '16px', color: '#4ecdc4', textAlign: 'center' }}>
-            3D PREVIEW
-          </h3>
-          <div style={{ fontSize: '8px', color: '#6a6a8a', marginBottom: '8px', textAlign: 'center' }}>
-            Drag to rotate manually
-          </div>
-          <SkinPreview3D
-            skinData={skinData}
-            autoRotate={autoRotate}
-            setAutoRotate={setAutoRotate}
-            selectedPart={selectedPart}
-          />
-        </div>
+      </div>
+
+      {/* Floating 3D Preview - Top Right Overlay */}
+      <div style={{
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        zIndex: 100,
+        background: 'rgba(20, 20, 40, 0.9)',
+        padding: '8px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+      }}>
+        <SkinPreview3D
+          skinData={skinData}
+          autoRotate={autoRotate}
+          setAutoRotate={setAutoRotate}
+          selectedPart={selectedPart}
+        />
       </div>
 
       <div style={{

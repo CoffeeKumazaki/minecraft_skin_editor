@@ -51,12 +51,12 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a1a2e);
 
-    const camera = new THREE.PerspectiveCamera(45, 300 / 400, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(45, 200 / 267, 0.1, 1000);
     camera.position.z = 40;
     camera.position.y = 5;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(300, 400);
+    renderer.setSize(200, 267);
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
