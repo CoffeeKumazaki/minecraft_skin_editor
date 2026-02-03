@@ -134,6 +134,7 @@ export function MinecraftSkinEditor() {
             skinData={skinData}
             autoRotate={autoRotate}
             setAutoRotate={setAutoRotate}
+            selectedPart={selectedPart}
           />
         </div>
       </div>

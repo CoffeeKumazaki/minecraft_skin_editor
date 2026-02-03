@@ -3,14 +3,25 @@
 import { useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { SKIN_WIDTH, SKIN_HEIGHT } from '@/constants/skin';
+import { BodyPartKey } from '@/types';
 
 interface SkinPreview3DProps {
   skinData: Uint8ClampedArray;
   autoRotate: boolean;
   setAutoRotate: (value: boolean) => void;
+  selectedPart: BodyPartKey;
 }
 
-export function SkinPreview3D({ skinData, autoRotate, setAutoRotate }: SkinPreview3DProps) {
+const PART_TO_INDEX: Record<BodyPartKey, number> = {
+  head: 0,
+  body: 1,
+  rightArm: 2,
+  leftArm: 3,
+  rightLeg: 4,
+  leftLeg: 5,
+};
+
+export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPart }: SkinPreview3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<{
     scene: THREE.Scene;
@@ -28,6 +39,7 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate }: SkinPrevi
   const isDragging = useRef(false);
   const lastMousePos = useRef({ x: 0, y: 0 });
   const autoRotateRef = useRef(autoRotate);
+  const outlineMeshesRef = useRef<THREE.LineSegments[]>([]);
 
   useEffect(() => {
     autoRotateRef.current = autoRotate;
@@ -74,6 +86,13 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate }: SkinPrevi
 
     const group = new THREE.Group();
 
+    const outlineMaterial = new THREE.LineBasicMaterial({
+      color: 0x4ecdc4,
+      transparent: true,
+      opacity: 0.9,
+    });
+    const outlineMeshes: THREE.LineSegments[] = [];
+
     const createUVs = (x: number, y: number, w: number, h: number) => {
       const u1 = x / SKIN_WIDTH;
       const v1 = 1 - (y + h) / SKIN_HEIGHT;
@@ -105,6 +124,20 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate }: SkinPrevi
 
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(...position);
+
+      // Create outline using EdgesGeometry (no diagonal lines)
+      const outlineBoxGeometry = new THREE.BoxGeometry(
+        width + 0.3,
+        height + 0.3,
+        depth + 0.3
+      );
+      const edgesGeometry = new THREE.EdgesGeometry(outlineBoxGeometry);
+      outlineBoxGeometry.dispose(); // No longer needed after EdgesGeometry creation
+      const outlineMesh = new THREE.LineSegments(edgesGeometry, outlineMaterial);
+      outlineMesh.position.set(...position);
+      outlineMesh.visible = false;
+      outlineMeshes.push(outlineMesh);
+
       return mesh;
     };
 
@@ -174,6 +207,10 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate }: SkinPrevi
     ];
     group.add(createBodyPart(4, 12, 4, leftLegUVs, [2, -8, 0]));
 
+    // Add outline meshes to group
+    outlineMeshes.forEach(mesh => group.add(mesh));
+    outlineMeshesRef.current = outlineMeshes;
+
     scene.add(group);
     sceneRef.current = { scene, camera, group };
 
@@ -221,6 +258,17 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate }: SkinPrevi
       if (containerRef.current && renderer.domElement) {
         containerRef.current.removeChild(renderer.domElement);
       }
+      // Dispose all geometries in group (body parts and outlines)
+      group.children.forEach(child => {
+        if (child instanceof THREE.Mesh || child instanceof THREE.LineSegments) {
+          child.geometry.dispose();
+        }
+      });
+      // Dispose materials and texture
+      material.dispose();
+      texture.dispose();
+      outlineMaterial.dispose();
+      outlineMeshesRef.current = [];
       renderer.dispose();
     };
   }, []);
@@ -235,6 +283,17 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate }: SkinPrevi
     ctx.putImageData(imageData, 0, 0);
     texture.needsUpdate = true;
   }, [skinData]);
+
+  // Update outline visibility based on selected part
+  useEffect(() => {
+    const outlineMeshes = outlineMeshesRef.current;
+    if (outlineMeshes.length === 0) return;
+
+    const selectedIndex = PART_TO_INDEX[selectedPart];
+    outlineMeshes.forEach((mesh, index) => {
+      mesh.visible = index === selectedIndex;
+    });
+  }, [selectedPart]);
 
   return (
     <div>
