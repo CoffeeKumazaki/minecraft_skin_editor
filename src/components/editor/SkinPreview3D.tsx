@@ -51,12 +51,12 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a1a2e);
 
-    const camera = new THREE.PerspectiveCamera(45, 180 / 220, 0.1, 1000);
-    camera.position.z = 40;
+    const camera = new THREE.PerspectiveCamera(45, 150 / 180, 0.1, 1000);
+    camera.position.z = 50;
     camera.position.y = 5;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(180, 220);
+    renderer.setSize(150, 180);
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -368,9 +368,7 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
       renderer.domElement.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
-      if (containerRef.current && renderer.domElement) {
-        containerRef.current.removeChild(renderer.domElement);
-      }
+      renderer.domElement.remove();
       // Dispose all geometries in group (body parts and outlines)
       group.children.forEach(child => {
         if (child instanceof THREE.Mesh || child instanceof THREE.LineSegments) {
