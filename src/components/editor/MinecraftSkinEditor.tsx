@@ -27,7 +27,7 @@ export function MinecraftSkinEditor() {
   } = useHistory<Uint8ClampedArray>(initialSkin.current, { maxHistory: 50 });
 
   const [skinData, setSkinData] = useState<Uint8ClampedArray>(initialSkin.current);
-  const [selectedColor, setSelectedColor] = useState<Color>({ r: 255, g: 100, b: 100, a: 255 });
+  const [selectedColor, setSelectedColor] = useState<Color>({ r: 0, g: 0, b: 0, a: 255 });
   const [secondaryColor, setSecondaryColor] = useState<Color>({ r: 255, g: 255, b: 255, a: 255 });
   const [tool, setTool] = useState<Tool>('brush');
   const [selectedPart, setSelectedPart] = useState<BodyPartKey>('head');

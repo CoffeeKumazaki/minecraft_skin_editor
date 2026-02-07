@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowLeftRight, Palette } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { ArrowLeftRight } from 'lucide-react';
 import { Color } from '@/types';
 import { PRESET_COLORS } from '@/constants/colors';
 import { colorToHex, hexToColor } from '@/utils/colorUtils';
@@ -23,6 +23,29 @@ export function ColorPickerVertical({
   colorHistory,
 }: ColorPickerVerticalProps) {
   const [showHSV, setShowHSV] = useState(false);
+  const [editingColor, setEditingColor] = useState<'primary' | 'secondary'>('primary');
+  const hsvPopupRef = useRef<HTMLDivElement>(null);
+  const swatchPairRef = useRef<HTMLDivElement>(null);
+
+  // Close HSV popup when clicking outside
+  useEffect(() => {
+    if (!showHSV) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        hsvPopupRef.current &&
+        !hsvPopupRef.current.contains(target) &&
+        swatchPairRef.current &&
+        !swatchPairRef.current.contains(target)
+      ) {
+        setShowHSV(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showHSV]);
 
   const swapColors = () => {
     const temp = selectedColor;
@@ -30,22 +53,35 @@ export function ColorPickerVertical({
     setSecondaryColor(temp);
   };
 
+  const handleSwatchClick = (which: 'primary' | 'secondary') => {
+    setEditingColor(which);
+    setShowHSV(true);
+  };
+
+  const handleColorChange = (color: Color) => {
+    if (editingColor === 'primary') {
+      setSelectedColor(color);
+    } else {
+      setSecondaryColor(color);
+    }
+  };
+
+  const currentEditingColor = editingColor === 'primary' ? selectedColor : secondaryColor;
+
   return (
     <>
       {/* Primary/Secondary Swatches (Piskel-style overlapping) */}
-      <div className="color-swatch-pair">
-        <input
-          type="color"
-          value={colorToHex(selectedColor)}
-          onChange={(e) => setSelectedColor(hexToColor(e.target.value))}
-          className="color-swatch-primary"
+      <div ref={swatchPairRef} className="color-swatch-pair">
+        <button
+          className={`color-swatch-primary ${showHSV && editingColor === 'primary' ? 'editing' : ''}`}
+          style={{ background: colorToHex(selectedColor) }}
+          onClick={() => handleSwatchClick('primary')}
           title="Primary (L-Click)"
         />
-        <input
-          type="color"
-          value={colorToHex(secondaryColor)}
-          onChange={(e) => setSecondaryColor(hexToColor(e.target.value))}
-          className="color-swatch-secondary"
+        <button
+          className={`color-swatch-secondary ${showHSV && editingColor === 'secondary' ? 'editing' : ''}`}
+          style={{ background: colorToHex(secondaryColor) }}
+          onClick={() => handleSwatchClick('secondary')}
           title="Secondary (R-Click)"
         />
         <button className="swap-btn-small" onClick={swapColors} title="Swap (X)">
@@ -53,20 +89,10 @@ export function ColorPickerVertical({
         </button>
       </div>
 
-      {/* HSV Toggle Button */}
-      <button
-        className={`tool-btn ${showHSV ? 'active' : ''}`}
-        onClick={() => setShowHSV(!showHSV)}
-        title="HSV Picker"
-        style={{ width: '40px', height: '32px' }}
-      >
-        <Palette size={16} />
-      </button>
-
       {/* HSV Picker Popup */}
       {showHSV && (
-        <div className="hsv-picker-popup-left">
-          <HSVColorPicker color={selectedColor} onChange={setSelectedColor} />
+        <div ref={hsvPopupRef} className="hsv-picker-popup-left">
+          <HSVColorPicker color={currentEditingColor} onChange={handleColorChange} />
         </div>
       )}
 

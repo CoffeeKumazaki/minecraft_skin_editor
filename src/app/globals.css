@@ -473,30 +473,42 @@ body {
   height: 48px;
 }
 
-.color-swatch-primary {
+.color-swatch-primary,
+.color-swatch-secondary {
   position: absolute;
-  top: 0;
-  left: 0;
   width: 32px;
   height: 32px;
-  border: 2px solid var(--accent-color);
   border-radius: 4px;
   cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.color-swatch-primary {
+  top: 0;
+  left: 0;
+  border: 2px solid var(--accent-color);
   z-index: 2;
-  background: none;
 }
 
 .color-swatch-secondary {
-  position: absolute;
   bottom: 0;
   right: 0;
-  width: 32px;
-  height: 32px;
   border: 2px solid var(--accent-secondary);
-  border-radius: 4px;
-  cursor: pointer;
   z-index: 1;
-  background: none;
+}
+
+.color-swatch-primary:hover,
+.color-swatch-secondary:hover {
+  transform: scale(1.05);
+}
+
+.color-swatch-primary.editing {
+  box-shadow: 0 0 8px var(--accent-color);
+}
+
+.color-swatch-secondary.editing {
+  box-shadow: 0 0 8px var(--accent-secondary);
 }
 
 .swap-btn-small {
