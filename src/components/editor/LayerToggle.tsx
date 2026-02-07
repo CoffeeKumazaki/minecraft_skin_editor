@@ -1,5 +1,6 @@
 'use client';
 
+import { Square, Layers } from 'lucide-react';
 import { Layer } from '@/types';
 
 interface LayerToggleProps {
@@ -13,14 +14,16 @@ export function LayerToggle({ selectedLayer, setSelectedLayer }: LayerToggleProp
       <button
         className={`layer-btn ${selectedLayer === 'inner' ? 'active' : ''}`}
         onClick={() => setSelectedLayer('inner')}
+        title="Inner Layer"
       >
-        Inner
+        <Square size={14} /> Inner
       </button>
       <button
         className={`layer-btn ${selectedLayer === 'outer' ? 'active' : ''}`}
         onClick={() => setSelectedLayer('outer')}
+        title="Outer Layer"
       >
-        Outer
+        <Layers size={14} /> Outer
       </button>
     </div>
   );

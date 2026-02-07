@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { Download } from 'lucide-react';
 import { BODY_PARTS } from '@/constants/bodyParts';
 import { SKIN_WIDTH } from '@/constants/skin';
 import { createDefaultSkin } from '@/utils/skinInitializer';
@@ -194,7 +195,9 @@ export function MinecraftSkinEditor() {
         <button
           className="download-btn"
           onClick={() => downloadSkin(skinData)}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
         >
+          <Download size={14} />
           Download PNG
         </button>
       </div>

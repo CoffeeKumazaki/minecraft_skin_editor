@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
+import { RotateCw, Pause } from 'lucide-react';
 import * as THREE from 'three';
 import { SKIN_WIDTH, SKIN_HEIGHT } from '@/constants/skin';
 import { BodyPartKey } from '@/types';
@@ -414,8 +415,10 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
         <button
           className={`tool-btn ${autoRotate ? 'active' : ''}`}
           onClick={() => setAutoRotate(!autoRotate)}
-          style={{ width: 'auto', padding: '4px 12px', fontSize: '8px' }}
+          style={{ width: 'auto', padding: '4px 12px', fontSize: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
+          title={autoRotate ? 'Stop' : 'Rotate'}
         >
+          {autoRotate ? <Pause size={12} /> : <RotateCw size={12} />}
           {autoRotate ? 'Stop' : 'Rotate'}
         </button>
       </div>

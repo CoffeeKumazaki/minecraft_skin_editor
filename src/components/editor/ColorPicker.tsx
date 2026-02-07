@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowLeftRight } from 'lucide-react';
 import { Color } from '@/types';
 import { PRESET_COLORS } from '@/constants/colors';
 import { colorToHex, hexToColor } from '@/utils/colorUtils';
@@ -48,7 +49,7 @@ export function ColorPicker({
 
         {/* Swap button */}
         <button onClick={swapColors} className="swap-btn" title="Swap colors">
-          &#8644;
+          <ArrowLeftRight size={16} />
         </button>
 
         {/* Secondary color */}
