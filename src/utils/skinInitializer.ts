@@ -1,4 +1,28 @@
 import { SKIN_WIDTH, SKIN_HEIGHT } from '@/constants/skin';
+import { BODY_PARTS } from '@/constants/bodyParts';
+
+type Color = { r: number; g: number; b: number };
+
+function fillRegion(
+  data: Uint8ClampedArray,
+  uvX: number,
+  uvY: number,
+  w: number,
+  h: number,
+  color: Color
+): void {
+  for (let py = 0; py < h; py++) {
+    for (let px = 0; px < w; px++) {
+      const x = uvX + px;
+      const y = uvY + py;
+      const idx = (y * SKIN_WIDTH + x) * 4;
+      data[idx] = color.r;
+      data[idx + 1] = color.g;
+      data[idx + 2] = color.b;
+      data[idx + 3] = 255;
+    }
+  }
+}
 
 export function createDefaultSkin(): Uint8ClampedArray {
   const data = new Uint8ClampedArray(SKIN_WIDTH * SKIN_HEIGHT * 4);
@@ -7,78 +31,36 @@ export function createDefaultSkin(): Uint8ClampedArray {
   const pantsColor = { r: 60, g: 60, b: 180 };
   const hairColor = { r: 70, g: 50, b: 30 };
 
-  // Head - skin
-  for (let y = 0; y < 16; y++) {
-    for (let x = 0; x < 32; x++) {
-      const idx = (y * SKIN_WIDTH + x) * 4;
-      if (y < 8) {
-        // Top of head - hair
-        data[idx] = hairColor.r;
-        data[idx + 1] = hairColor.g;
-        data[idx + 2] = hairColor.b;
-      } else {
-        data[idx] = skinColor.r;
-        data[idx + 1] = skinColor.g;
-        data[idx + 2] = skinColor.b;
-      }
-      data[idx + 3] = 255;
-    }
-  }
+  // Head - use UV coordinates from BODY_PARTS
+  BODY_PARTS.head.layout.regions.forEach(region => {
+    const color = region.name === 'Top' ? hairColor : skinColor;
+    fillRegion(data, region.uvX, region.uvY, region.w, region.h, color);
+  });
 
-  // Body - shirt
-  for (let y = 16; y < 32; y++) {
-    for (let x = 16; x < 40; x++) {
-      const idx = (y * SKIN_WIDTH + x) * 4;
-      data[idx] = shirtColor.r;
-      data[idx + 1] = shirtColor.g;
-      data[idx + 2] = shirtColor.b;
-      data[idx + 3] = 255;
-    }
-  }
+  // Body
+  BODY_PARTS.body.layout.regions.forEach(region => {
+    fillRegion(data, region.uvX, region.uvY, region.w, region.h, shirtColor);
+  });
 
-  // Right arm
-  for (let y = 16; y < 32; y++) {
-    for (let x = 40; x < 56; x++) {
-      const idx = (y * SKIN_WIDTH + x) * 4;
-      data[idx] = skinColor.r;
-      data[idx + 1] = skinColor.g;
-      data[idx + 2] = skinColor.b;
-      data[idx + 3] = 255;
-    }
-  }
+  // Right Arm
+  BODY_PARTS.rightArm.layout.regions.forEach(region => {
+    fillRegion(data, region.uvX, region.uvY, region.w, region.h, skinColor);
+  });
 
-  // Left arm
-  for (let y = 48; y < 64; y++) {
-    for (let x = 32; x < 48; x++) {
-      const idx = (y * SKIN_WIDTH + x) * 4;
-      data[idx] = skinColor.r;
-      data[idx + 1] = skinColor.g;
-      data[idx + 2] = skinColor.b;
-      data[idx + 3] = 255;
-    }
-  }
+  // Left Arm
+  BODY_PARTS.leftArm.layout.regions.forEach(region => {
+    fillRegion(data, region.uvX, region.uvY, region.w, region.h, skinColor);
+  });
 
-  // Right leg
-  for (let y = 16; y < 32; y++) {
-    for (let x = 0; x < 16; x++) {
-      const idx = (y * SKIN_WIDTH + x) * 4;
-      data[idx] = pantsColor.r;
-      data[idx + 1] = pantsColor.g;
-      data[idx + 2] = pantsColor.b;
-      data[idx + 3] = 255;
-    }
-  }
+  // Right Leg
+  BODY_PARTS.rightLeg.layout.regions.forEach(region => {
+    fillRegion(data, region.uvX, region.uvY, region.w, region.h, pantsColor);
+  });
 
-  // Left leg
-  for (let y = 48; y < 64; y++) {
-    for (let x = 16; x < 32; x++) {
-      const idx = (y * SKIN_WIDTH + x) * 4;
-      data[idx] = pantsColor.r;
-      data[idx + 1] = pantsColor.g;
-      data[idx + 2] = pantsColor.b;
-      data[idx + 3] = 255;
-    }
-  }
+  // Left Leg
+  BODY_PARTS.leftLeg.layout.regions.forEach(region => {
+    fillRegion(data, region.uvX, region.uvY, region.w, region.h, pantsColor);
+  });
 
   return data;
 }
