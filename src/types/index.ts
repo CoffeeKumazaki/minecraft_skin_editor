@@ -24,7 +24,9 @@ export interface BodyPartLayout {
 export interface BodyPart {
   name: string;
   layout: BodyPartLayout;
+  outerLayout?: BodyPartLayout;
 }
 
 export type BodyPartKey = 'head' | 'body' | 'rightArm' | 'leftArm' | 'rightLeg' | 'leftLeg';
+export type Layer = 'inner' | 'outer';
 export type Tool = 'brush' | 'eraser' | 'eyedropper';

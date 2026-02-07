@@ -3,10 +3,11 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { BODY_PARTS } from '@/constants/bodyParts';
 import { SKIN_WIDTH } from '@/constants/skin';
-import { Color, BodyPartKey, Tool } from '@/types';
+import { Color, BodyPartKey, Tool, Layer } from '@/types';
 
 interface ConnectedUVEditorProps {
   part: BodyPartKey;
+  layer: Layer;
   skinData: Uint8ClampedArray;
   onPaint: (x: number, y: number, color: Color) => void;
   onStrokeEnd?: () => void;
@@ -19,6 +20,7 @@ interface ConnectedUVEditorProps {
 
 export function ConnectedUVEditor({
   part,
+  layer,
   skinData,
   onPaint,
   onStrokeEnd,
@@ -31,7 +33,11 @@ export function ConnectedUVEditor({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
   const activeButton = useRef<number>(0);
-  const { layout } = BODY_PARTS[part];
+  const bodyPart = BODY_PARTS[part];
+  // Use outer layout if available and outer layer selected, fallback to inner
+  const layout = layer === 'outer' && bodyPart.outerLayout
+    ? bodyPart.outerLayout
+    : bodyPart.layout;
 
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;

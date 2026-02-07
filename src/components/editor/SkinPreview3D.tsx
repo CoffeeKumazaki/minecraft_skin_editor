@@ -84,6 +84,14 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
       alphaTest: 0.1
     });
 
+    // Outer layer material (same texture, but renders after inner layer)
+    const outerMaterial = new THREE.MeshLambertMaterial({
+      map: texture,
+      transparent: true,
+      alphaTest: 0.1,
+      side: THREE.FrontSide,
+    });
+
     const group = new THREE.Group();
 
     const outlineMaterial = new THREE.LineBasicMaterial({
@@ -92,6 +100,9 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
       opacity: 0.9,
     });
     const outlineMeshes: THREE.LineSegments[] = [];
+
+    // Outer layer offset (slightly larger than inner layer)
+    const OUTER_OFFSET = 0.5;
 
     const createUVs = (x: number, y: number, w: number, h: number) => {
       const u1 = x / SKIN_WIDTH;
@@ -124,6 +135,7 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(...position);
+      mesh.renderOrder = 0;
 
       // Create outline using EdgesGeometry (no diagonal lines)
       const outlineBoxGeometry = new THREE.BoxGeometry(
@@ -137,6 +149,39 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
       outlineMesh.position.set(...position);
       outlineMesh.visible = false;
       outlineMeshes.push(outlineMesh);
+
+      return mesh;
+    };
+
+    // Create outer layer mesh (slightly larger than inner)
+    const createOuterLayer = (
+      width: number,
+      height: number,
+      depth: number,
+      uvData: number[][],
+      position: [number, number, number]
+    ) => {
+      const geometry = new THREE.BoxGeometry(
+        width + OUTER_OFFSET * 2,
+        height + OUTER_OFFSET * 2,
+        depth + OUTER_OFFSET * 2
+      );
+      const uvAttribute = geometry.attributes.uv;
+      const uvs = uvAttribute.array as Float32Array;
+
+      let uvIndex = 0;
+      for (let face = 0; face < 6; face++) {
+        const faceUVs = uvData[face];
+        for (let i = 0; i < 4; i++) {
+          uvs[uvIndex++] = faceUVs[i * 2];
+          uvs[uvIndex++] = faceUVs[i * 2 + 1];
+        }
+      }
+      uvAttribute.needsUpdate = true;
+
+      const mesh = new THREE.Mesh(geometry, outerMaterial);
+      mesh.position.set(...position);
+      mesh.renderOrder = 1; // Render after inner layer
 
       return mesh;
     };
@@ -207,6 +252,74 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     ];
     group.add(createBodyPart(4, 12, 4, leftLegUVs, [2, -8, 0]));
 
+    // === OUTER LAYER MESHES ===
+
+    // Head Outer (Hat)
+    const headOuterUVs = [
+      createUVs(32, 8, 8, 8),   // Right
+      createUVs(48, 8, 8, 8),   // Left
+      createUVs(40, 0, 8, 8),   // Top
+      createUVs(48, 0, 8, 8),   // Bottom
+      createUVs(40, 8, 8, 8),   // Front
+      createUVs(56, 8, 8, 8),   // Back
+    ];
+    group.add(createOuterLayer(8, 8, 8, headOuterUVs, [0, 14, 0]));
+
+    // Body Outer (Jacket)
+    const bodyOuterUVs = [
+      createUVs(16, 36, 4, 12),  // Right
+      createUVs(28, 36, 4, 12),  // Left
+      createUVs(20, 32, 8, 4),   // Top
+      createUVs(28, 32, 8, 4),   // Bottom
+      createUVs(20, 36, 8, 12),  // Front
+      createUVs(32, 36, 8, 12),  // Back
+    ];
+    group.add(createOuterLayer(8, 12, 4, bodyOuterUVs, [0, 4, 0]));
+
+    // Right Arm Outer (Sleeve)
+    const rightArmOuterUVs = [
+      createUVs(40, 36, 4, 12),  // Right
+      createUVs(48, 36, 4, 12),  // Left
+      createUVs(44, 32, 4, 4),   // Top
+      createUVs(48, 32, 4, 4),   // Bottom
+      createUVs(44, 36, 4, 12),  // Front
+      createUVs(52, 36, 4, 12),  // Back
+    ];
+    group.add(createOuterLayer(4, 12, 4, rightArmOuterUVs, [-6, 4, 0]));
+
+    // Left Arm Outer (Sleeve)
+    const leftArmOuterUVs = [
+      createUVs(48, 52, 4, 12),  // Right
+      createUVs(56, 52, 4, 12),  // Left
+      createUVs(52, 48, 4, 4),   // Top
+      createUVs(56, 48, 4, 4),   // Bottom
+      createUVs(52, 52, 4, 12),  // Front
+      createUVs(60, 52, 4, 12),  // Back
+    ];
+    group.add(createOuterLayer(4, 12, 4, leftArmOuterUVs, [6, 4, 0]));
+
+    // Right Leg Outer (Pants)
+    const rightLegOuterUVs = [
+      createUVs(0, 36, 4, 12),   // Right
+      createUVs(8, 36, 4, 12),   // Left
+      createUVs(4, 32, 4, 4),    // Top
+      createUVs(8, 32, 4, 4),    // Bottom
+      createUVs(4, 36, 4, 12),   // Front
+      createUVs(12, 36, 4, 12),  // Back
+    ];
+    group.add(createOuterLayer(4, 12, 4, rightLegOuterUVs, [-2, -8, 0]));
+
+    // Left Leg Outer (Pants)
+    const leftLegOuterUVs = [
+      createUVs(0, 52, 4, 12),   // Right
+      createUVs(8, 52, 4, 12),   // Left
+      createUVs(4, 48, 4, 4),    // Top
+      createUVs(8, 48, 4, 4),    // Bottom
+      createUVs(4, 52, 4, 12),   // Front
+      createUVs(12, 52, 4, 12),  // Back
+    ];
+    group.add(createOuterLayer(4, 12, 4, leftLegOuterUVs, [2, -8, 0]));
+
     // Add outline meshes to group
     outlineMeshes.forEach(mesh => group.add(mesh));
     outlineMeshesRef.current = outlineMeshes;
@@ -266,6 +379,7 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
       });
       // Dispose materials and texture
       material.dispose();
+      outerMaterial.dispose();
       texture.dispose();
       outlineMaterial.dispose();
       outlineMeshesRef.current = [];
@@ -275,7 +389,7 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
   useEffect(() => {
     if (!textureRef.current) return;
-    const { texture, canvas, ctx, imageData } = textureRef.current;
+    const { texture, ctx, imageData } = textureRef.current;
 
     for (let i = 0; i < skinData.length; i++) {
       imageData.data[i] = skinData[i];

@@ -378,3 +378,34 @@ body {
   background: linear-gradient(180deg, #4ecdc4 0%, #26a69a 100%);
   border-color: #80deea;
 }
+
+/* Layer Toggle */
+.layer-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.layer-btn {
+  flex: 1;
+  background: linear-gradient(180deg, #2a2a4a 0%, #1a1a3a 100%);
+  border: 2px solid #3a3a5a;
+  color: #8a8aaa;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.layer-btn:hover {
+  background: linear-gradient(180deg, #3a3a5a 0%, #2a2a4a 100%);
+  color: #fff;
+}
+
+.layer-btn.active {
+  background: linear-gradient(180deg, #ff6b6b 0%, #ee5a5a 100%);
+  border-color: #ff8888;
+  color: #fff;
+}

@@ -5,13 +5,14 @@ import { BODY_PARTS } from '@/constants/bodyParts';
 import { SKIN_WIDTH } from '@/constants/skin';
 import { createDefaultSkin } from '@/utils/skinInitializer';
 import { downloadSkin } from '@/utils/exportSkin';
-import { Color, BodyPartKey, Tool } from '@/types';
+import { Color, BodyPartKey, Tool, Layer } from '@/types';
 import { useHistory } from '@/hooks/useHistory';
 import { ConnectedUVEditor } from './ConnectedUVEditor';
 import { SkinPreview3D } from './SkinPreview3D';
 import { ToolPanel } from './ToolPanel';
 import { ColorPicker } from './ColorPicker';
 import { BodyPartSelector } from './BodyPartSelector';
+import { LayerToggle } from './LayerToggle';
 
 export function MinecraftSkinEditor() {
   const initialSkin = useRef<Uint8ClampedArray>(createDefaultSkin());
@@ -27,6 +28,7 @@ export function MinecraftSkinEditor() {
   const [secondaryColor, setSecondaryColor] = useState<Color>({ r: 255, g: 255, b: 255, a: 255 });
   const [tool, setTool] = useState<Tool>('brush');
   const [selectedPart, setSelectedPart] = useState<BodyPartKey>('head');
+  const [selectedLayer, setSelectedLayer] = useState<Layer>('inner');
   const [autoRotate, setAutoRotate] = useState(true);
 
   // Sync display state when undo/redo changes committed state
@@ -100,7 +102,7 @@ export function MinecraftSkinEditor() {
       <div className="canvas-area">
         <div className="canvas-header">
           <span className="canvas-title">
-            {BODY_PARTS[selectedPart].name.toUpperCase()} - UV MAP
+            {BODY_PARTS[selectedPart].name.toUpperCase()} - {selectedLayer.toUpperCase()} LAYER
           </span>
         </div>
 
@@ -112,6 +114,7 @@ export function MinecraftSkinEditor() {
         }}>
           <ConnectedUVEditor
             part={selectedPart}
+            layer={selectedLayer}
             skinData={skinData}
             onPaint={handlePaint}
             onStrokeEnd={handleStrokeEnd}
@@ -144,6 +147,12 @@ export function MinecraftSkinEditor() {
             setAutoRotate={setAutoRotate}
             selectedPart={selectedPart}
           />
+        </div>
+
+        {/* Layer Toggle */}
+        <div className="sidebar-section">
+          <div className="sidebar-title">Layer</div>
+          <LayerToggle selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} />
         </div>
 
         {/* Body Parts */}
