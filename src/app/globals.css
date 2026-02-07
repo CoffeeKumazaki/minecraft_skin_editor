@@ -5,9 +5,8 @@
 }
 
 :root {
-  --toolbar-width: 56px;
+  --left-toolbar-width: 80px;
   --sidebar-width: 220px;
-  --colorbar-height: 64px;
   --bg-primary: rgba(20, 20, 40, 0.95);
   --bg-canvas: rgba(10, 10, 26, 0.9);
   --border-color: #3a3a5a;
@@ -23,11 +22,9 @@ body {
 /* Piskel-style Editor Container */
 .editor-container {
   display: grid;
-  grid-template-rows: 1fr var(--colorbar-height);
-  grid-template-columns: var(--toolbar-width) 1fr var(--sidebar-width);
-  grid-template-areas:
-    "toolbar canvas sidebar"
-    "colorbar colorbar colorbar";
+  grid-template-rows: 1fr;
+  grid-template-columns: var(--left-toolbar-width) 1fr var(--sidebar-width);
+  grid-template-areas: "toolbar canvas sidebar";
   height: 100vh;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   font-family: "Press Start 2P", "Courier New", monospace;
@@ -40,10 +37,27 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px 0;
-  gap: 8px;
+  padding: 12px 8px;
+  gap: 12px;
   background: var(--bg-primary);
   border-right: 2px solid var(--border-color);
+  overflow-y: auto;
+}
+
+/* Left Toolbar Sections */
+.left-toolbar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.left-toolbar-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 /* Main Canvas Area */
@@ -70,16 +84,6 @@ body {
   overflow-y: auto;
 }
 
-/* Bottom Color Bar */
-.color-bar {
-  grid-area: colorbar;
-  display: flex;
-  align-items: center;
-  padding: 8px 16px;
-  gap: 16px;
-  background: var(--bg-primary);
-  border-top: 2px solid var(--border-color);
-}
 
 /* Vertical Tool Button */
 .tool-btn {
@@ -460,6 +464,103 @@ body {
   border: 1px solid var(--border-color);
   border-radius: 4px;
   cursor: ew-resize;
+}
+
+/* Piskel-style Color Swatches (Vertical) */
+.color-swatch-pair {
+  position: relative;
+  width: 48px;
+  height: 48px;
+}
+
+.color-swatch-primary {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--accent-color);
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 2;
+  background: none;
+}
+
+.color-swatch-secondary {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--accent-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 1;
+  background: none;
+}
+
+.swap-btn-small {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 3;
+  color: var(--accent-color);
+  padding: 0;
+}
+
+.swap-btn-small:hover {
+  background: rgba(78, 205, 196, 0.2);
+}
+
+/* Vertical Color History */
+.color-history-vertical {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  max-width: 64px;
+}
+
+.color-history-vertical .color-preset {
+  width: 18px;
+  height: 18px;
+}
+
+/* Vertical Color Presets */
+.color-presets-vertical {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  width: 100%;
+}
+
+.color-presets-vertical .color-preset {
+  width: 18px;
+  height: 18px;
+}
+
+/* HSV Picker Popup (Left Toolbar) */
+.hsv-picker-popup-left {
+  position: fixed;
+  left: calc(var(--left-toolbar-width) + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.4);
+  z-index: 100;
 }
 
 /* Color History */

@@ -12,7 +12,7 @@ import { useColorHistory } from '@/hooks/useColorHistory';
 import { ConnectedUVEditor } from './ConnectedUVEditor';
 import { SkinPreview3D } from './SkinPreview3D';
 import { ToolPanel } from './ToolPanel';
-import { ColorPicker } from './ColorPicker';
+import { ColorPickerVertical } from './ColorPickerVertical';
 import { BodyPartSelector } from './BodyPartSelector';
 import { LayerToggle } from './LayerToggle';
 import { ModelTypeSelector } from './ModelTypeSelector';
@@ -32,7 +32,7 @@ export function MinecraftSkinEditor() {
   const [tool, setTool] = useState<Tool>('brush');
   const [selectedPart, setSelectedPart] = useState<BodyPartKey>('head');
   const [selectedLayer, setSelectedLayer] = useState<Layer>('inner');
-  const [autoRotate, setAutoRotate] = useState(true);
+  const [autoRotate, setAutoRotate] = useState(false);
   const [modelType, setModelType] = useState<ModelType>('steve');
   const { history: colorHistory, addColor: addToColorHistory } = useColorHistory();
 
@@ -121,9 +121,23 @@ export function MinecraftSkinEditor() {
 
   return (
     <div className="editor-container">
-      {/* Left Toolbar */}
+      {/* Left Toolbar: Tools + Colors (Piskel-style) */}
       <div className="left-toolbar">
-        <ToolPanel tool={tool} setTool={setTool} />
+        {/* Tools Section */}
+        <div className="left-toolbar-section">
+          <ToolPanel tool={tool} setTool={setTool} />
+        </div>
+
+        {/* Colors Section */}
+        <div className="left-toolbar-section">
+          <ColorPickerVertical
+            selectedColor={selectedColor}
+            setSelectedColor={setSelectedColor}
+            secondaryColor={secondaryColor}
+            setSecondaryColor={setSecondaryColor}
+            colorHistory={colorHistory}
+          />
+        </div>
       </div>
 
       {/* Main Canvas Area */}
@@ -222,16 +236,6 @@ export function MinecraftSkinEditor() {
         </button>
       </div>
 
-      {/* Bottom Color Bar */}
-      <div className="color-bar">
-        <ColorPicker
-          selectedColor={selectedColor}
-          setSelectedColor={setSelectedColor}
-          secondaryColor={secondaryColor}
-          setSecondaryColor={setSecondaryColor}
-          colorHistory={colorHistory}
-        />
-      </div>
     </div>
   );
 }
