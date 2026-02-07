@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Download } from 'lucide-react';
-import { BODY_PARTS } from '@/constants/bodyParts';
+import { getBodyParts } from '@/constants/bodyParts';
 import { SKIN_WIDTH } from '@/constants/skin';
 import { createDefaultSkin } from '@/utils/skinInitializer';
 import { downloadSkin } from '@/utils/exportSkin';
-import { Color, BodyPartKey, Tool, Layer } from '@/types';
+import { Color, BodyPartKey, Tool, Layer, ModelType } from '@/types';
 import { useHistory } from '@/hooks/useHistory';
 import { ConnectedUVEditor } from './ConnectedUVEditor';
 import { SkinPreview3D } from './SkinPreview3D';
@@ -14,6 +14,7 @@ import { ToolPanel } from './ToolPanel';
 import { ColorPicker } from './ColorPicker';
 import { BodyPartSelector } from './BodyPartSelector';
 import { LayerToggle } from './LayerToggle';
+import { ModelTypeSelector } from './ModelTypeSelector';
 
 export function MinecraftSkinEditor() {
   const initialSkin = useRef<Uint8ClampedArray>(createDefaultSkin());
@@ -31,6 +32,9 @@ export function MinecraftSkinEditor() {
   const [selectedPart, setSelectedPart] = useState<BodyPartKey>('head');
   const [selectedLayer, setSelectedLayer] = useState<Layer>('inner');
   const [autoRotate, setAutoRotate] = useState(true);
+  const [modelType, setModelType] = useState<ModelType>('steve');
+
+  const bodyParts = useMemo(() => getBodyParts(modelType), [modelType]);
 
   // Sync display state when undo/redo changes committed state
   useEffect(() => {
@@ -102,7 +106,7 @@ export function MinecraftSkinEditor() {
   }, [undo, redo]);
 
   const getScale = (part: BodyPartKey) => {
-    const layout = BODY_PARTS[part].layout;
+    const layout = bodyParts[part].layout;
     const maxWidth = 560;
     return Math.floor(maxWidth / layout.width);
   };
@@ -118,7 +122,7 @@ export function MinecraftSkinEditor() {
       <div className="canvas-area">
         <div className="canvas-header">
           <span className="canvas-title">
-            {BODY_PARTS[selectedPart].name.toUpperCase()} - {selectedLayer.toUpperCase()} LAYER
+            {bodyParts[selectedPart].name.toUpperCase()} - {selectedLayer.toUpperCase()} LAYER
           </span>
         </div>
 
@@ -140,6 +144,7 @@ export function MinecraftSkinEditor() {
             selectedColor={selectedColor}
             secondaryColor={secondaryColor}
             tool={tool}
+            bodyParts={bodyParts}
           />
         </div>
 
@@ -163,7 +168,14 @@ export function MinecraftSkinEditor() {
             autoRotate={autoRotate}
             setAutoRotate={setAutoRotate}
             selectedPart={selectedPart}
+            modelType={modelType}
           />
+        </div>
+
+        {/* Model Type */}
+        <div className="sidebar-section">
+          <div className="sidebar-title">Model</div>
+          <ModelTypeSelector modelType={modelType} setModelType={setModelType} />
         </div>
 
         {/* Layer Toggle */}

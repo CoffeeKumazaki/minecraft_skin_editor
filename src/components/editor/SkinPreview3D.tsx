@@ -4,13 +4,14 @@ import { useRef, useEffect } from 'react';
 import { RotateCw, Pause } from 'lucide-react';
 import * as THREE from 'three';
 import { SKIN_WIDTH, SKIN_HEIGHT } from '@/constants/skin';
-import { BodyPartKey } from '@/types';
+import { BodyPartKey, ModelType } from '@/types';
 
 interface SkinPreview3DProps {
   skinData: Uint8ClampedArray;
   autoRotate: boolean;
   setAutoRotate: (value: boolean) => void;
   selectedPart: BodyPartKey;
+  modelType: ModelType;
 }
 
 const PART_TO_INDEX: Record<BodyPartKey, number> = {
@@ -22,7 +23,7 @@ const PART_TO_INDEX: Record<BodyPartKey, number> = {
   leftLeg: 5,
 };
 
-export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPart }: SkinPreview3DProps) {
+export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPart, modelType }: SkinPreview3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<{
     scene: THREE.Scene;
@@ -49,6 +50,11 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
   useEffect(() => {
     if (!containerRef.current) return;
 
+    // Clear container before creating new renderer (for model type changes)
+    while (containerRef.current.firstChild) {
+      containerRef.current.removeChild(containerRef.current.firstChild);
+    }
+
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a1a2e);
 
@@ -59,6 +65,8 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(150, 180);
     containerRef.current.appendChild(renderer.domElement);
+    // Save reference to THIS renderer to check in cleanup
+    const currentRenderer = renderer;
     rendererRef.current = renderer;
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -78,6 +86,13 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     texture.magFilter = THREE.NearestFilter;
     texture.minFilter = THREE.NearestFilter;
     textureRef.current = { texture, canvas, ctx, imageData };
+
+    // Initialize texture with current skinData immediately
+    for (let i = 0; i < skinData.length; i++) {
+      imageData.data[i] = skinData[i];
+    }
+    ctx.putImageData(imageData, 0, 0);
+    texture.needsUpdate = true;
 
     const material = new THREE.MeshLambertMaterial({
       map: texture,
@@ -209,8 +224,19 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     ];
     group.add(createBodyPart(8, 12, 4, bodyUVs, [0, 4, 0]));
 
+    // Arm dimensions based on model type
+    const armWidth = modelType === 'alex' ? 3 : 4;
+    const armXOffset = modelType === 'alex' ? 5.5 : 6;
+
     // Right Arm
-    const rightArmUVs = [
+    const rightArmUVs = modelType === 'alex' ? [
+      createUVs(47, 20, 4, 12),  // Left → +X (depth face, always 4)
+      createUVs(40, 20, 4, 12),  // Right → -X (depth face, always 4)
+      createUVs(44, 16, 3, 4),   // Top (3px)
+      createUVs(47, 16, 3, 4),   // Bottom (3px)
+      createUVs(44, 20, 3, 12),  // Front (3px)
+      createUVs(51, 20, 3, 12),  // Back (3px)
+    ] : [
       createUVs(48, 20, 4, 12),  // Left → +X (viewer's right)
       createUVs(40, 20, 4, 12),  // Right → -X (viewer's left)
       createUVs(44, 16, 4, 4),
@@ -218,10 +244,17 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
       createUVs(44, 20, 4, 12),
       createUVs(52, 20, 4, 12),
     ];
-    group.add(createBodyPart(4, 12, 4, rightArmUVs, [-6, 4, 0]));
+    group.add(createBodyPart(armWidth, 12, 4, rightArmUVs, [-armXOffset, 4, 0]));
 
     // Left Arm
-    const leftArmUVs = [
+    const leftArmUVs = modelType === 'alex' ? [
+      createUVs(39, 52, 4, 12),  // Left → +X (depth face, always 4)
+      createUVs(32, 52, 4, 12),  // Right → -X (depth face, always 4)
+      createUVs(36, 48, 3, 4),   // Top (3px)
+      createUVs(39, 48, 3, 4),   // Bottom (3px)
+      createUVs(36, 52, 3, 12),  // Front (3px)
+      createUVs(43, 52, 3, 12),  // Back (3px)
+    ] : [
       createUVs(40, 52, 4, 12),  // Left → +X (viewer's right)
       createUVs(32, 52, 4, 12),  // Right → -X (viewer's left)
       createUVs(36, 48, 4, 4),
@@ -229,7 +262,7 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
       createUVs(36, 52, 4, 12),
       createUVs(44, 52, 4, 12),
     ];
-    group.add(createBodyPart(4, 12, 4, leftArmUVs, [6, 4, 0]));
+    group.add(createBodyPart(armWidth, 12, 4, leftArmUVs, [armXOffset, 4, 0]));
 
     // Right Leg
     const rightLegUVs = [
@@ -278,7 +311,14 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     group.add(createOuterLayer(8, 12, 4, bodyOuterUVs, [0, 4, 0]));
 
     // Right Arm Outer (Sleeve)
-    const rightArmOuterUVs = [
+    const rightArmOuterUVs = modelType === 'alex' ? [
+      createUVs(47, 36, 4, 12),  // Left → +X (depth face, always 4)
+      createUVs(40, 36, 4, 12),  // Right → -X (depth face, always 4)
+      createUVs(44, 32, 3, 4),   // Top (3px)
+      createUVs(47, 32, 3, 4),   // Bottom (3px)
+      createUVs(44, 36, 3, 12),  // Front (3px)
+      createUVs(51, 36, 3, 12),  // Back (3px)
+    ] : [
       createUVs(48, 36, 4, 12),  // Left → +X (viewer's right)
       createUVs(40, 36, 4, 12),  // Right → -X (viewer's left)
       createUVs(44, 32, 4, 4),   // Top
@@ -286,10 +326,17 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
       createUVs(44, 36, 4, 12),  // Front
       createUVs(52, 36, 4, 12),  // Back
     ];
-    group.add(createOuterLayer(4, 12, 4, rightArmOuterUVs, [-6, 4, 0]));
+    group.add(createOuterLayer(armWidth, 12, 4, rightArmOuterUVs, [-armXOffset, 4, 0]));
 
     // Left Arm Outer (Sleeve)
-    const leftArmOuterUVs = [
+    const leftArmOuterUVs = modelType === 'alex' ? [
+      createUVs(55, 52, 4, 12),  // Left → +X (depth face, always 4)
+      createUVs(48, 52, 4, 12),  // Right → -X (depth face, always 4)
+      createUVs(52, 48, 3, 4),   // Top (3px)
+      createUVs(55, 48, 3, 4),   // Bottom (3px)
+      createUVs(52, 52, 3, 12),  // Front (3px)
+      createUVs(59, 52, 3, 12),  // Back (3px)
+    ] : [
       createUVs(56, 52, 4, 12),  // Left → +X (viewer's right)
       createUVs(48, 52, 4, 12),  // Right → -X (viewer's left)
       createUVs(52, 48, 4, 4),   // Top
@@ -297,7 +344,7 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
       createUVs(52, 52, 4, 12),  // Front
       createUVs(60, 52, 4, 12),  // Back
     ];
-    group.add(createOuterLayer(4, 12, 4, leftArmOuterUVs, [6, 4, 0]));
+    group.add(createOuterLayer(armWidth, 12, 4, leftArmOuterUVs, [armXOffset, 4, 0]));
 
     // Right Leg Outer (Pants)
     const rightLegOuterUVs = [
@@ -324,6 +371,12 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     // Add outline meshes to group
     outlineMeshes.forEach(mesh => group.add(mesh));
     outlineMeshesRef.current = outlineMeshes;
+
+    // Set initial visibility based on current selectedPart
+    const selectedIndex = PART_TO_INDEX[selectedPart];
+    outlineMeshes.forEach((mesh, index) => {
+      mesh.visible = index === selectedIndex;
+    });
 
     // Add floor grid for orientation
     const gridHelper = new THREE.GridHelper(16, 4, 0x2a2a4a, 0x3a3a5a);
@@ -393,24 +446,28 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
       renderer.domElement.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
-      renderer.domElement.remove();
-      // Dispose all geometries in group (body parts and outlines)
-      group.children.forEach(child => {
-        if (child instanceof THREE.Mesh || child instanceof THREE.LineSegments) {
-          child.geometry.dispose();
-        }
-      });
-      // Dispose materials and texture
-      material.dispose();
-      outerMaterial.dispose();
-      texture.dispose();
-      outlineMaterial.dispose();
-      arrowMaterial.dispose();
-      arrowGeometry.dispose();
-      outlineMeshesRef.current = [];
-      renderer.dispose();
+
+      // Only dispose if this renderer is still the current one
+      // (If a new effect has run, rendererRef.current will be different)
+      if (rendererRef.current === currentRenderer) {
+        // Dispose all geometries in group (body parts and outlines)
+        group.children.forEach(child => {
+          if (child instanceof THREE.Mesh || child instanceof THREE.LineSegments) {
+            child.geometry.dispose();
+          }
+        });
+        // Dispose materials and texture
+        material.dispose();
+        outerMaterial.dispose();
+        texture.dispose();
+        outlineMaterial.dispose();
+        arrowMaterial.dispose();
+        arrowGeometry.dispose();
+        outlineMeshesRef.current = [];
+        renderer.dispose();
+      }
     };
-  }, []);
+  }, [modelType]);
 
   useEffect(() => {
     if (!textureRef.current) return;

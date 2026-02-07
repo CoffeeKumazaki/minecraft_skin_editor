@@ -30,3 +30,4 @@ export interface BodyPart {
 export type BodyPartKey = 'head' | 'body' | 'rightArm' | 'leftArm' | 'rightLeg' | 'leftLeg';
 export type Layer = 'inner' | 'outer';
 export type Tool = 'brush' | 'eraser' | 'eyedropper' | 'bucket';
+export type ModelType = 'steve' | 'alex';

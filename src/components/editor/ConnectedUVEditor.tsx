@@ -1,9 +1,8 @@
 'use client';
 
 import { useRef, useEffect, useCallback } from 'react';
-import { BODY_PARTS } from '@/constants/bodyParts';
 import { SKIN_WIDTH } from '@/constants/skin';
-import { Color, BodyPartKey, Tool, Layer, Region } from '@/types';
+import { Color, BodyPartKey, Tool, Layer, Region, BodyPart } from '@/types';
 import { floodFill } from '@/utils/floodFill';
 
 interface ConnectedUVEditorProps {
@@ -18,6 +17,7 @@ interface ConnectedUVEditorProps {
   selectedColor: Color;
   secondaryColor: Color;
   tool: Tool;
+  bodyParts: Record<BodyPartKey, BodyPart>;
 }
 
 export function ConnectedUVEditor({
@@ -32,11 +32,12 @@ export function ConnectedUVEditor({
   selectedColor,
   secondaryColor,
   tool,
+  bodyParts,
 }: ConnectedUVEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
   const activeButton = useRef<number>(0);
-  const bodyPart = BODY_PARTS[part];
+  const bodyPart = bodyParts[part];
   // Use outer layout if available and outer layer selected, fallback to inner
   const layout = layer === 'outer' && bodyPart.outerLayout
     ? bodyPart.outerLayout
