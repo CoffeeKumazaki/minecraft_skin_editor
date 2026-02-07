@@ -1,15 +1,19 @@
 'use client';
 
-import { ArrowLeftRight } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeftRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { Color } from '@/types';
 import { PRESET_COLORS } from '@/constants/colors';
 import { colorToHex, hexToColor } from '@/utils/colorUtils';
+import { HSVColorPicker } from './HSVColorPicker';
+import { ColorHistory } from './ColorHistory';
 
 interface ColorPickerProps {
   selectedColor: Color;
   setSelectedColor: (color: Color) => void;
   secondaryColor: Color;
   setSecondaryColor: (color: Color) => void;
+  colorHistory: Color[];
 }
 
 export function ColorPicker({
@@ -17,7 +21,10 @@ export function ColorPicker({
   setSelectedColor,
   secondaryColor,
   setSecondaryColor,
+  colorHistory,
 }: ColorPickerProps) {
+  const [showHSVPicker, setShowHSVPicker] = useState(false);
+
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedColor(hexToColor(e.target.value));
   };
@@ -34,17 +41,33 @@ export function ColorPicker({
 
   return (
     <>
+      {/* HSV Picker Popup */}
+      {showHSVPicker && (
+        <div className="hsv-picker-popup">
+          <HSVColorPicker color={selectedColor} onChange={setSelectedColor} />
+        </div>
+      )}
+
       {/* Color Picker Section */}
       <div className="color-picker-section">
         {/* Primary color */}
         <div className="color-input-wrapper">
           <span className="color-input-label">L-CLICK</span>
-          <input
-            type="color"
-            value={colorToHex(selectedColor)}
-            onChange={handleColorChange}
-            className="color-input primary"
-          />
+          <div style={{ position: 'relative' }}>
+            <input
+              type="color"
+              value={colorToHex(selectedColor)}
+              onChange={handleColorChange}
+              className="color-input primary"
+            />
+            <button
+              className="hsv-toggle"
+              onClick={() => setShowHSVPicker(!showHSVPicker)}
+              title="Toggle HSV Picker"
+            >
+              {showHSVPicker ? <ChevronDown size={10} /> : <ChevronUp size={10} />}
+            </button>
+          </div>
         </div>
 
         {/* Swap button */}
@@ -66,6 +89,20 @@ export function ColorPicker({
 
       {/* Separator */}
       <div style={{ width: '1px', height: '40px', background: 'var(--border-color)' }} />
+
+      {/* Color History */}
+      <ColorHistory
+        history={colorHistory}
+        selectedColor={selectedColor}
+        secondaryColor={secondaryColor}
+        onSelectPrimary={setSelectedColor}
+        onSelectSecondary={setSecondaryColor}
+      />
+
+      {/* Separator (only if history exists) */}
+      {colorHistory.length > 0 && (
+        <div style={{ width: '1px', height: '40px', background: 'var(--border-color)' }} />
+      )}
 
       {/* Preset Colors */}
       <div className="color-presets">

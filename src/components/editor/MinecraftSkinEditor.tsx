@@ -8,6 +8,7 @@ import { createDefaultSkin } from '@/utils/skinInitializer';
 import { downloadSkin } from '@/utils/exportSkin';
 import { Color, BodyPartKey, Tool, Layer, ModelType } from '@/types';
 import { useHistory } from '@/hooks/useHistory';
+import { useColorHistory } from '@/hooks/useColorHistory';
 import { ConnectedUVEditor } from './ConnectedUVEditor';
 import { SkinPreview3D } from './SkinPreview3D';
 import { ToolPanel } from './ToolPanel';
@@ -33,6 +34,7 @@ export function MinecraftSkinEditor() {
   const [selectedLayer, setSelectedLayer] = useState<Layer>('inner');
   const [autoRotate, setAutoRotate] = useState(true);
   const [modelType, setModelType] = useState<ModelType>('steve');
+  const { history: colorHistory, addColor: addToColorHistory } = useColorHistory();
 
   const bodyParts = useMemo(() => getBodyParts(modelType), [modelType]);
 
@@ -42,6 +44,9 @@ export function MinecraftSkinEditor() {
   }, [committedSkinData]);
 
   const handlePaint = useCallback((x: number, y: number, color: Color) => {
+    if (color.a > 0) {
+      addToColorHistory(color);
+    }
     setSkinData(prev => {
       const newData = new Uint8ClampedArray(prev);
       const idx = (y * SKIN_WIDTH + x) * 4;
@@ -51,7 +56,7 @@ export function MinecraftSkinEditor() {
       newData[idx + 3] = color.a;
       return newData;
     });
-  }, []);
+  }, [addToColorHistory]);
 
   const handleStrokeEnd = useCallback(() => {
     setSkinData(current => {
@@ -61,6 +66,9 @@ export function MinecraftSkinEditor() {
   }, [commitToHistory]);
 
   const handleBatchPaint = useCallback((pixels: Array<{ x: number; y: number }>, color: Color) => {
+    if (color.a > 0) {
+      addToColorHistory(color);
+    }
     setSkinData(prev => {
       const newData = new Uint8ClampedArray(prev);
       for (const { x, y } of pixels) {
@@ -73,7 +81,7 @@ export function MinecraftSkinEditor() {
       commitToHistory(newData);
       return newData;
     });
-  }, [commitToHistory]);
+  }, [commitToHistory, addToColorHistory]);
 
   const handleColorPicked = useCallback((color: Color, isSecondary: boolean) => {
     if (isSecondary) {
@@ -221,6 +229,7 @@ export function MinecraftSkinEditor() {
           setSelectedColor={setSelectedColor}
           secondaryColor={secondaryColor}
           setSecondaryColor={setSecondaryColor}
+          colorHistory={colorHistory}
         />
       </div>
     </div>
