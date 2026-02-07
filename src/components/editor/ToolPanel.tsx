@@ -11,6 +11,7 @@ const TOOLS: { id: Tool; icon: string; label: string }[] = [
   { id: 'brush', icon: '✏', label: 'Brush' },
   { id: 'eraser', icon: '◻', label: 'Eraser' },
   { id: 'eyedropper', icon: '💧', label: 'Picker' },
+  { id: 'bucket', icon: '🪣', label: 'Fill' },
 ];
 
 export function ToolPanel({ tool, setTool }: ToolPanelProps) {

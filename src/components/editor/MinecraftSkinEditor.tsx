@@ -55,6 +55,21 @@ export function MinecraftSkinEditor() {
     });
   }, [commitToHistory]);
 
+  const handleBatchPaint = useCallback((pixels: Array<{ x: number; y: number }>, color: Color) => {
+    setSkinData(prev => {
+      const newData = new Uint8ClampedArray(prev);
+      for (const { x, y } of pixels) {
+        const idx = (y * SKIN_WIDTH + x) * 4;
+        newData[idx] = color.r;
+        newData[idx + 1] = color.g;
+        newData[idx + 2] = color.b;
+        newData[idx + 3] = color.a;
+      }
+      commitToHistory(newData);
+      return newData;
+    });
+  }, [commitToHistory]);
+
   const handleColorPicked = useCallback((color: Color, isSecondary: boolean) => {
     if (isSecondary) {
       setSecondaryColor(color);
@@ -117,6 +132,7 @@ export function MinecraftSkinEditor() {
             layer={selectedLayer}
             skinData={skinData}
             onPaint={handlePaint}
+            onBatchPaint={handleBatchPaint}
             onStrokeEnd={handleStrokeEnd}
             onColorPicked={handleColorPicked}
             scale={getScale(selectedPart)}
