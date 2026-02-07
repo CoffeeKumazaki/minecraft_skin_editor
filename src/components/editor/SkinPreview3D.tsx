@@ -325,6 +325,30 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     outlineMeshes.forEach(mesh => group.add(mesh));
     outlineMeshesRef.current = outlineMeshes;
 
+    // Add floor grid for orientation
+    const gridHelper = new THREE.GridHelper(16, 4, 0x2a2a4a, 0x3a3a5a);
+    gridHelper.position.y = -15;
+    group.add(gridHelper);
+
+    // Add front direction arrow
+    const arrowShape = new THREE.Shape();
+    arrowShape.moveTo(0, 2);
+    arrowShape.lineTo(-1.5, -1);
+    arrowShape.lineTo(1.5, -1);
+    arrowShape.closePath();
+
+    const arrowGeometry = new THREE.ShapeGeometry(arrowShape);
+    const arrowMaterial = new THREE.MeshBasicMaterial({
+      color: 0x4ecdc4,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.7
+    });
+    const frontArrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
+    frontArrow.rotation.x = -Math.PI / 2;
+    frontArrow.position.set(0, -14.9, 10);
+    group.add(frontArrow);
+
     scene.add(group);
     sceneRef.current = { scene, camera, group };
 
@@ -381,6 +405,8 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
       outerMaterial.dispose();
       texture.dispose();
       outlineMaterial.dispose();
+      arrowMaterial.dispose();
+      arrowGeometry.dispose();
       outlineMeshesRef.current = [];
       renderer.dispose();
     };
