@@ -188,8 +188,8 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
     // Head
     const headUVs = [
-      createUVs(0, 8, 8, 8),
-      createUVs(16, 8, 8, 8),
+      createUVs(16, 8, 8, 8),   // Left → +X (viewer's right)
+      createUVs(0, 8, 8, 8),    // Right → -X (viewer's left)
       createUVs(8, 0, 8, 8),
       createUVs(16, 0, 8, 8),
       createUVs(8, 8, 8, 8),
@@ -199,8 +199,8 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
     // Body
     const bodyUVs = [
-      createUVs(16, 20, 4, 12),
-      createUVs(28, 20, 4, 12),
+      createUVs(28, 20, 4, 12),  // Left → +X (viewer's right)
+      createUVs(16, 20, 4, 12),  // Right → -X (viewer's left)
       createUVs(20, 16, 8, 4),
       createUVs(28, 16, 8, 4),
       createUVs(20, 20, 8, 12),
@@ -210,8 +210,8 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
     // Right Arm
     const rightArmUVs = [
-      createUVs(40, 20, 4, 12),
-      createUVs(48, 20, 4, 12),
+      createUVs(48, 20, 4, 12),  // Left → +X (viewer's right)
+      createUVs(40, 20, 4, 12),  // Right → -X (viewer's left)
       createUVs(44, 16, 4, 4),
       createUVs(48, 16, 4, 4),
       createUVs(44, 20, 4, 12),
@@ -221,8 +221,8 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
     // Left Arm
     const leftArmUVs = [
-      createUVs(32, 52, 4, 12),
-      createUVs(40, 52, 4, 12),
+      createUVs(40, 52, 4, 12),  // Left → +X (viewer's right)
+      createUVs(32, 52, 4, 12),  // Right → -X (viewer's left)
       createUVs(36, 48, 4, 4),
       createUVs(40, 48, 4, 4),
       createUVs(36, 52, 4, 12),
@@ -232,8 +232,8 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
     // Right Leg
     const rightLegUVs = [
-      createUVs(0, 20, 4, 12),
-      createUVs(8, 20, 4, 12),
+      createUVs(8, 20, 4, 12),   // Left → +X (viewer's right)
+      createUVs(0, 20, 4, 12),   // Right → -X (viewer's left)
       createUVs(4, 16, 4, 4),
       createUVs(8, 16, 4, 4),
       createUVs(4, 20, 4, 12),
@@ -243,8 +243,8 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
     // Left Leg
     const leftLegUVs = [
-      createUVs(16, 52, 4, 12),
-      createUVs(24, 52, 4, 12),
+      createUVs(24, 52, 4, 12),  // Left → +X (viewer's right)
+      createUVs(16, 52, 4, 12),  // Right → -X (viewer's left)
       createUVs(20, 48, 4, 4),
       createUVs(24, 48, 4, 4),
       createUVs(20, 52, 4, 12),
@@ -256,8 +256,8 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
     // Head Outer (Hat)
     const headOuterUVs = [
-      createUVs(32, 8, 8, 8),   // Right
-      createUVs(48, 8, 8, 8),   // Left
+      createUVs(48, 8, 8, 8),   // Left → +X (viewer's right)
+      createUVs(32, 8, 8, 8),   // Right → -X (viewer's left)
       createUVs(40, 0, 8, 8),   // Top
       createUVs(48, 0, 8, 8),   // Bottom
       createUVs(40, 8, 8, 8),   // Front
@@ -267,8 +267,8 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
     // Body Outer (Jacket)
     const bodyOuterUVs = [
-      createUVs(16, 36, 4, 12),  // Right
-      createUVs(28, 36, 4, 12),  // Left
+      createUVs(28, 36, 4, 12),  // Left → +X (viewer's right)
+      createUVs(16, 36, 4, 12),  // Right → -X (viewer's left)
       createUVs(20, 32, 8, 4),   // Top
       createUVs(28, 32, 8, 4),   // Bottom
       createUVs(20, 36, 8, 12),  // Front
@@ -278,8 +278,8 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
     // Right Arm Outer (Sleeve)
     const rightArmOuterUVs = [
-      createUVs(40, 36, 4, 12),  // Right
-      createUVs(48, 36, 4, 12),  // Left
+      createUVs(48, 36, 4, 12),  // Left → +X (viewer's right)
+      createUVs(40, 36, 4, 12),  // Right → -X (viewer's left)
       createUVs(44, 32, 4, 4),   // Top
       createUVs(48, 32, 4, 4),   // Bottom
       createUVs(44, 36, 4, 12),  // Front
@@ -289,8 +289,8 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
     // Left Arm Outer (Sleeve)
     const leftArmOuterUVs = [
-      createUVs(48, 52, 4, 12),  // Right
-      createUVs(56, 52, 4, 12),  // Left
+      createUVs(56, 52, 4, 12),  // Left → +X (viewer's right)
+      createUVs(48, 52, 4, 12),  // Right → -X (viewer's left)
       createUVs(52, 48, 4, 4),   // Top
       createUVs(56, 48, 4, 4),   // Bottom
       createUVs(52, 52, 4, 12),  // Front
@@ -300,8 +300,8 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
     // Right Leg Outer (Pants)
     const rightLegOuterUVs = [
-      createUVs(0, 36, 4, 12),   // Right
-      createUVs(8, 36, 4, 12),   // Left
+      createUVs(8, 36, 4, 12),   // Left → +X (viewer's right)
+      createUVs(0, 36, 4, 12),   // Right → -X (viewer's left)
       createUVs(4, 32, 4, 4),    // Top
       createUVs(8, 32, 4, 4),    // Bottom
       createUVs(4, 36, 4, 12),   // Front
@@ -311,8 +311,8 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
     // Left Leg Outer (Pants)
     const leftLegOuterUVs = [
-      createUVs(0, 52, 4, 12),   // Right
-      createUVs(8, 52, 4, 12),   // Left
+      createUVs(8, 52, 4, 12),   // Left → +X (viewer's right)
+      createUVs(0, 52, 4, 12),   // Right → -X (viewer's left)
       createUVs(4, 48, 4, 4),    // Top
       createUVs(8, 48, 4, 4),    // Bottom
       createUVs(4, 52, 4, 12),   // Front
