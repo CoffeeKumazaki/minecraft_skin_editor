@@ -1,11 +1,29 @@
 import type { Metadata } from "next";
-import { Press_Start_2P } from "next/font/google";
+import { Bricolage_Grotesque, IBM_Plex_Mono, Caveat, Silkscreen } from "next/font/google";
 import "./globals.css";
 
-const pressStart2P = Press_Start_2P({
+const bricolage = Bricolage_Grotesque({
+  weight: ["500", "700", "800"],
+  subsets: ["latin"],
+  variable: "--font-bricolage",
+});
+
+const plexMono = IBM_Plex_Mono({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-plex-mono",
+});
+
+const caveat = Caveat({
+  weight: "500",
+  subsets: ["latin"],
+  variable: "--font-caveat",
+});
+
+const silkscreen = Silkscreen({
   weight: "400",
   subsets: ["latin"],
-  variable: "--font-press-start",
+  variable: "--font-silkscreen",
 });
 
 export const metadata: Metadata = {
@@ -20,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={pressStart2P.variable}>
+      <body className={`${bricolage.variable} ${plexMono.variable} ${caveat.variable} ${silkscreen.variable}`}>
         {children}
       </body>
     </html>

@@ -8,16 +8,28 @@ interface BodyPartSelectorProps {
   setSelectedPart: (part: BodyPartKey) => void;
 }
 
+// Two columns: character's right side first (as seen from the front)
+const PART_TAGS: { key: BodyPartKey; label: string }[] = [
+  { key: 'head', label: 'head' },
+  { key: 'body', label: 'body' },
+  { key: 'rightArm', label: 'r.arm' },
+  { key: 'leftArm', label: 'l.arm' },
+  { key: 'rightLeg', label: 'r.leg' },
+  { key: 'leftLeg', label: 'l.leg' },
+];
+
 export function BodyPartSelector({ selectedPart, setSelectedPart }: BodyPartSelectorProps) {
   return (
-    <div className="part-grid">
-      {(Object.entries(BODY_PARTS) as [BodyPartKey, typeof BODY_PARTS[BodyPartKey]][]).map(([key, part]) => (
+    <div className="part-tags">
+      {PART_TAGS.map(({ key, label }) => (
         <button
           key={key}
-          className={`part-btn-sidebar ${selectedPart === key ? 'active' : ''}`}
+          className={`part-tag ${selectedPart === key ? 'active' : ''}`}
           onClick={() => setSelectedPart(key)}
+          title={BODY_PARTS[key].name}
+          aria-pressed={selectedPart === key}
         >
-          {part.name}
+          {label}
         </button>
       ))}
     </div>

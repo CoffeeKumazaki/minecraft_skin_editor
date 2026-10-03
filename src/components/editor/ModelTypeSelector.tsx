@@ -7,23 +7,25 @@ interface ModelTypeSelectorProps {
   setModelType: (type: ModelType) => void;
 }
 
+const MODELS: { id: ModelType; label: string; title: string }[] = [
+  { id: 'steve', label: 'steve', title: 'Steve (4px arms)' },
+  { id: 'alex', label: 'alex', title: 'Alex (3px arms)' },
+];
+
 export function ModelTypeSelector({ modelType, setModelType }: ModelTypeSelectorProps) {
   return (
-    <div className="layer-toggle">
-      <button
-        className={`layer-btn ${modelType === 'steve' ? 'active' : ''}`}
-        onClick={() => setModelType('steve')}
-        title="Steve (4px arms)"
-      >
-        Steve
-      </button>
-      <button
-        className={`layer-btn ${modelType === 'alex' ? 'active' : ''}`}
-        onClick={() => setModelType('alex')}
-        title="Alex (3px arms)"
-      >
-        Alex
-      </button>
+    <div className="segmented">
+      {MODELS.map(({ id, label, title }) => (
+        <button
+          key={id}
+          className={`segment ${modelType === id ? 'active' : ''}`}
+          onClick={() => setModelType(id)}
+          title={title}
+          aria-pressed={modelType === id}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   );
 }

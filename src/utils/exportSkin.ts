@@ -1,6 +1,6 @@
 import { SKIN_WIDTH, SKIN_HEIGHT } from '@/constants/skin';
 
-export function downloadSkin(skinData: Uint8ClampedArray): void {
+export function downloadSkin(skinData: Uint8ClampedArray, fileName = 'minecraft-skin.png'): void {
   const canvas = document.createElement('canvas');
   canvas.width = SKIN_WIDTH;
   canvas.height = SKIN_HEIGHT;
@@ -14,7 +14,7 @@ export function downloadSkin(skinData: Uint8ClampedArray): void {
   ctx.putImageData(imageData, 0, 0);
 
   const link = document.createElement('a');
-  link.download = 'minecraft-skin.png';
+  link.download = fileName;
   link.href = canvas.toDataURL('image/png');
   link.click();
 }

@@ -1,9 +1,26 @@
 'use client';
 
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { SKIN_WIDTH } from '@/constants/skin';
 import { Color, BodyPartKey, Tool, Layer, Region, BodyPart } from '@/types';
 import { floodFill } from '@/utils/floodFill';
+
+export interface HoverInfo {
+  face: string;
+  x: number;
+  y: number;
+  uvX: number;
+  uvY: number;
+}
+
+export const FACE_KEYS: Record<string, string> = {
+  Top: 'T',
+  Bottom: 'B',
+  Front: 'F',
+  Back: 'K',
+  Right: 'R',
+  Left: 'L',
+};
 
 interface ConnectedUVEditorProps {
   part: BodyPartKey;
@@ -18,6 +35,8 @@ interface ConnectedUVEditorProps {
   secondaryColor: Color;
   tool: Tool;
   bodyParts: Record<BodyPartKey, BodyPart>;
+  showGrid?: boolean;
+  onHoverChange?: (info: HoverInfo | null) => void;
 }
 
 export function ConnectedUVEditor({
@@ -33,10 +52,17 @@ export function ConnectedUVEditor({
   secondaryColor,
   tool,
   bodyParts,
+  showGrid = true,
+  onHoverChange,
 }: ConnectedUVEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [hoverCell, setHoverCell] = useState<{ x: number; y: number } | null>(null);
   const isDrawing = useRef(false);
   const activeButton = useRef<number>(0);
+  // Tool at stroke start: the whole stroke (painting + history commit) uses it,
+  // even if the tool is switched by shortcut mid-stroke
+  const strokeTool = useRef<Tool>(tool);
+  const [fontsReady, setFontsReady] = useState(false);
   const bodyPart = bodyParts[part];
   // Use outer layout if available and outer layer selected, fallback to inner
   const layout = layer === 'outer' && bodyPart.outerLayout
@@ -50,74 +76,97 @@ export function ConnectedUVEditor({
     if (!ctx) return;
 
     ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = '#0a0a1a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw each region
+    // Draw each region (checkerboard behind transparent pixels)
     layout.regions.forEach(region => {
       for (let py = 0; py < region.h; py++) {
         for (let px = 0; px < region.w; px++) {
           const skinX = region.uvX + px;
           const skinY = region.uvY + py;
           const idx = (skinY * SKIN_WIDTH + skinX) * 4;
+          const cellX = (region.x + px) * scale;
+          const cellY = (region.y + py) * scale;
 
-          const r = skinData[idx];
-          const g = skinData[idx + 1];
-          const b = skinData[idx + 2];
+          ctx.fillStyle = (px + py) % 2 === 0 ? '#f4f1e9' : '#e9e4d8';
+          ctx.fillRect(cellX, cellY, scale, scale);
+
           const a = skinData[idx + 3];
-
           if (a > 0) {
-            ctx.fillStyle = `rgba(${r},${g},${b},${a / 255})`;
-            ctx.fillRect((region.x + px) * scale, (region.y + py) * scale, scale, scale);
+            ctx.fillStyle = `rgba(${skinData[idx]},${skinData[idx + 1]},${skinData[idx + 2]},${a / 255})`;
+            ctx.fillRect(cellX, cellY, scale, scale);
           }
         }
       }
     });
 
-    // Draw grid
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = 1;
-    for (let x = 0; x <= layout.width; x++) {
+    // Draw pixel grid inside each region
+    if (showGrid) {
+      ctx.strokeStyle = 'rgba(0,0,0,0.13)';
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(x * scale, 0);
-      ctx.lineTo(x * scale, layout.height * scale);
+      layout.regions.forEach(region => {
+        for (let x = 1; x < region.w; x++) {
+          const lx = (region.x + x) * scale + 0.5;
+          ctx.moveTo(lx, region.y * scale);
+          ctx.lineTo(lx, (region.y + region.h) * scale);
+        }
+        for (let y = 1; y < region.h; y++) {
+          const ly = (region.y + y) * scale + 0.5;
+          ctx.moveTo(region.x * scale, ly);
+          ctx.lineTo((region.x + region.w) * scale, ly);
+        }
+      });
       ctx.stroke();
-    }
-    for (let y = 0; y <= layout.height; y++) {
-      ctx.beginPath();
-      ctx.moveTo(0, y * scale);
-      ctx.lineTo(layout.width * scale, y * scale);
-      ctx.stroke();
+
+      // Outline each face (inset so adjacent faces show a 2px seam and outer edges aren't clipped)
+      ctx.lineWidth = 1;
+      layout.regions.forEach(region => {
+        ctx.strokeStyle = region.name === 'Front' ? '#ff5a1f' : '#141414';
+        ctx.strokeRect(
+          region.x * scale + 0.5,
+          region.y * scale + 0.5,
+          region.w * scale - 1,
+          region.h * scale - 1
+        );
+      });
     }
 
-    // Draw region borders and labels
-    ctx.strokeStyle = 'rgba(78, 205, 196, 0.5)';
-    ctx.lineWidth = 2;
-    ctx.font = `${Math.max(8, scale * 0.8)}px "Press Start 2P", monospace`;
+    // Draw face badges (top-left corner of each region)
+    const pixelFont = getComputedStyle(document.body).getPropertyValue('--font-silkscreen').trim() || 'monospace';
+    ctx.font = `10px ${pixelFont}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-
     layout.regions.forEach(region => {
-      ctx.strokeRect(
-        region.x * scale,
-        region.y * scale,
-        region.w * scale,
-        region.h * scale
-      );
-
-      // Draw label
-      ctx.fillStyle = 'rgba(78, 205, 196, 0.7)';
-      const labelX = (region.x + region.w / 2) * scale;
-      const labelY = (region.y + region.h / 2) * scale;
-      ctx.fillText(region.name[0], labelX, labelY);
+      const bx = region.x * scale;
+      const by = region.y * scale;
+      const isFront = region.name === 'Front';
+      ctx.fillStyle = isFront ? 'rgba(255, 90, 31, 0.9)' : 'rgba(20, 20, 20, 0.85)';
+      ctx.fillRect(bx, by, 16, 16);
+      ctx.fillStyle = isFront ? '#141414' : '#ffffff';
+      ctx.fillText(FACE_KEYS[region.name] ?? region.name[0], bx + 8, by + 8.5);
     });
-  }, [layout, skinData, scale]);
+
+    // Draw hovered pixel outline
+    if (hoverCell) {
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#000';
+      ctx.strokeRect(hoverCell.x * scale - 1, hoverCell.y * scale - 1, scale + 2, scale + 2);
+      ctx.strokeStyle = '#fff';
+      ctx.strokeRect(hoverCell.x * scale + 1, hoverCell.y * scale + 1, scale - 2, scale - 2);
+    }
+  }, [layout, skinData, scale, showGrid, hoverCell]);
+
+  // Redraw once webfonts are ready so badges use the pixel font
+  useEffect(() => {
+    document.fonts?.ready.then(() => setFontsReady(true));
+  }, []);
 
   useEffect(() => {
     drawCanvas();
-  }, [drawCanvas]);
+  }, [drawCanvas, fontsReady]);
 
-  const getPixelFromEvent = (e: React.MouseEvent<HTMLCanvasElement>): { skinX: number; skinY: number; region: Region } | null => {
+  const getPixelFromEvent = (e: React.MouseEvent<HTMLCanvasElement>): { x: number; y: number; skinX: number; skinY: number; region: Region } | null => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
@@ -131,6 +180,8 @@ export function ConnectedUVEditor({
         const localX = x - region.x;
         const localY = y - region.y;
         return {
+          x,
+          y,
           skinX: region.uvX + localX,
           skinY: region.uvY + localY,
           region
@@ -143,9 +194,10 @@ export function ConnectedUVEditor({
   const paint = (e: React.MouseEvent<HTMLCanvasElement>, button?: number) => {
     const pixel = getPixelFromEvent(e);
     if (pixel) {
+      const activeTool = strokeTool.current;
       const isRightClick = (button ?? activeButton.current) === 2;
 
-      if (tool === 'eyedropper') {
+      if (activeTool === 'eyedropper') {
         const idx = (pixel.skinY * SKIN_WIDTH + pixel.skinX) * 4;
         const pickedColor: Color = {
           r: skinData[idx],
@@ -157,7 +209,7 @@ export function ConnectedUVEditor({
         return;
       }
 
-      if (tool === 'bucket') {
+      if (activeTool === 'bucket') {
         const fillColor = isRightClick ? secondaryColor : selectedColor;
         const pixels = floodFill(skinData, pixel.skinX, pixel.skinY, pixel.region, fillColor);
         if (pixels.length > 0) {
@@ -166,7 +218,7 @@ export function ConnectedUVEditor({
         return;
       }
 
-      const color = tool === 'eraser'
+      const color = activeTool === 'eraser'
         ? { r: 0, g: 0, b: 0, a: 0 }
         : isRightClick ? secondaryColor : selectedColor;
       onPaint(pixel.skinX, pixel.skinY, color);
@@ -177,12 +229,40 @@ export function ConnectedUVEditor({
     if (e.button === 1) return; // Ignore middle button
     isDrawing.current = true;
     activeButton.current = e.button;
+    strokeTool.current = tool;
     paint(e, e.button);
   };
 
+  const updateHover = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const pixel = getPixelFromEvent(e);
+    if (!pixel) {
+      if (hoverCell) {
+        setHoverCell(null);
+        onHoverChange?.(null);
+      }
+      return;
+    }
+    if (hoverCell?.x === pixel.x && hoverCell?.y === pixel.y) return;
+    setHoverCell({ x: pixel.x, y: pixel.y });
+    onHoverChange?.({
+      face: pixel.region.name,
+      x: pixel.x - pixel.region.x,
+      y: pixel.y - pixel.region.y,
+      uvX: pixel.skinX,
+      uvY: pixel.skinY,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    handleMouseUp();
+    setHoverCell(null);
+    onHoverChange?.(null);
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    updateHover(e);
     // Bucket tool doesn't support drag painting
-    if (isDrawing.current && tool !== 'bucket') {
+    if (isDrawing.current && strokeTool.current !== 'bucket') {
       paint(e);
     }
   };
@@ -192,7 +272,7 @@ export function ConnectedUVEditor({
       isDrawing.current = false;
       activeButton.current = 0;
       // Bucket tool commits history in onBatchPaint, skip onStrokeEnd
-      if (tool !== 'bucket') {
+      if (strokeTool.current !== 'bucket') {
         onStrokeEnd?.();
       }
     }
@@ -218,12 +298,11 @@ export function ConnectedUVEditor({
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
       onContextMenu={(e) => e.preventDefault()}
       style={{
         cursor: getCursor(),
         imageRendering: 'pixelated',
-        borderRadius: '4px',
       }}
     />
   );

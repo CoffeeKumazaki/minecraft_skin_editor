@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { RotateCw, Pause } from 'lucide-react';
+import { Rotate3d, RotateCcw } from 'lucide-react';
 import * as THREE from 'three';
 import { SKIN_WIDTH, SKIN_HEIGHT } from '@/constants/skin';
 import { BodyPartKey, ModelType } from '@/types';
@@ -13,6 +13,11 @@ interface SkinPreview3DProps {
   selectedPart: BodyPartKey;
   modelType: ModelType;
 }
+
+// Fits the 350px sidebar card (inner width 308px)
+const PREVIEW_WIDTH = 308;
+const PREVIEW_HEIGHT = 170;
+const DEFAULT_ROTATION = { x: 0.2, y: 0 };
 
 const PART_TO_INDEX: Record<BodyPartKey, number> = {
   head: 0,
@@ -37,7 +42,7 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     ctx: CanvasRenderingContext2D;
     imageData: ImageData;
   } | null>(null);
-  const rotationRef = useRef({ x: 0.2, y: 0 });
+  const rotationRef = useRef({ ...DEFAULT_ROTATION });
   const isDragging = useRef(false);
   const lastMousePos = useRef({ x: 0, y: 0 });
   const autoRotateRef = useRef(autoRotate);
@@ -56,14 +61,14 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     }
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a2e);
-
-    const camera = new THREE.PerspectiveCamera(45, 150 / 180, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(45, PREVIEW_WIDTH / PREVIEW_HEIGHT, 0.1, 1000);
     camera.position.z = 50;
     camera.position.y = 5;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(150, 180);
+    // Transparent background so the CSS viewport gradient shows through
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(PREVIEW_WIDTH, PREVIEW_HEIGHT);
     containerRef.current.appendChild(renderer.domElement);
     // Save reference to THIS renderer to check in cleanup
     const currentRenderer = renderer;
@@ -110,8 +115,9 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
     const group = new THREE.Group();
 
+    // White reads on both the orange card and skin colors
     const outlineMaterial = new THREE.LineBasicMaterial({
-      color: 0x4ecdc4,
+      color: 0xffffff,
       transparent: true,
       opacity: 0.9,
     });
@@ -379,7 +385,10 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     });
 
     // Add floor grid for orientation
-    const gridHelper = new THREE.GridHelper(16, 4, 0x2a2a4a, 0x3a3a5a);
+    const gridHelper = new THREE.GridHelper(16, 4, 0x141414, 0x141414);
+    const gridMaterial = gridHelper.material as THREE.LineBasicMaterial;
+    gridMaterial.transparent = true;
+    gridMaterial.opacity = 0.35;
     gridHelper.position.y = -15;
     group.add(gridHelper);
 
@@ -392,7 +401,7 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
 
     const arrowGeometry = new THREE.ShapeGeometry(arrowShape);
     const arrowMaterial = new THREE.MeshBasicMaterial({
-      color: 0x4ecdc4,
+      color: 0x141414,
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0.7
@@ -492,19 +501,30 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
   }, [selectedPart]);
 
   return (
-    <div>
-      <div ref={containerRef} style={{ cursor: 'grab' }} />
-      <div style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'center' }}>
-        <button
-          className={`tool-btn ${autoRotate ? 'active' : ''}`}
-          onClick={() => setAutoRotate(!autoRotate)}
-          style={{ width: 'auto', padding: '4px 12px', fontSize: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
-          title={autoRotate ? 'Stop' : 'Rotate'}
-        >
-          {autoRotate ? <Pause size={12} /> : <RotateCw size={12} />}
-          {autoRotate ? 'Stop' : 'Rotate'}
-        </button>
+    <section className="card accent">
+      <div className="card-header">
+        <span className="card-title">Live 3D</span>
+        <div className="preview-tools">
+          <button
+            className={`chip-btn ${autoRotate ? 'active' : ''}`}
+            onClick={() => setAutoRotate(!autoRotate)}
+            title={autoRotate ? 'Stop rotation' : 'Auto rotate'}
+            aria-pressed={autoRotate}
+          >
+            <Rotate3d size={13} />
+            spin
+          </button>
+          <button
+            className="chip-btn"
+            onClick={() => { rotationRef.current = { ...DEFAULT_ROTATION }; }}
+            title="Reset view"
+          >
+            <RotateCcw size={13} />
+            reset
+          </button>
+        </div>
       </div>
-    </div>
+      <div ref={containerRef} className="preview-viewport" title="Drag to orbit" />
+    </section>
   );
 }

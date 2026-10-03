@@ -14,66 +14,71 @@ interface UseHistoryReturn<T> {
   reset: (initialState: T) => void;
 }
 
+interface HistoryState<T> {
+  past: T[];
+  present: T;
+  future: T[];
+}
+
 export function useHistory<T>(
   initialState: T,
   options: UseHistoryOptions = {}
 ): UseHistoryReturn<T> {
   const { maxHistory = 50 } = options;
 
-  const [past, setPast] = useState<T[]>([]);
-  const [present, setPresent] = useState<T>(initialState);
-  const [future, setFuture] = useState<T[]>([]);
-
-  const canUndo = past.length > 0;
-  const canRedo = future.length > 0;
+  // Single state object so every transition reads the latest present
+  // (avoids stale closures when set() is called after an await)
+  const [history, setHistory] = useState<HistoryState<T>>({
+    past: [],
+    present: initialState,
+    future: [],
+  });
 
   const set = useCallback((newState: T) => {
-    setPast(prev => {
-      const newPast = [...prev, present];
-      if (newPast.length > maxHistory) {
-        return newPast.slice(newPast.length - maxHistory);
-      }
-      return newPast;
+    setHistory(prev => {
+      // Committing the current state again is a no-op (keeps double-invoked updaters safe)
+      if (Object.is(prev.present, newState)) return prev;
+      return {
+        past: [...prev.past, prev.present].slice(-maxHistory),
+        present: newState,
+        future: [],
+      };
     });
-    setPresent(newState);
-    setFuture([]);
-  }, [present, maxHistory]);
+  }, [maxHistory]);
 
   const undo = useCallback(() => {
-    if (past.length === 0) return;
-
-    const previous = past[past.length - 1];
-    const newPast = past.slice(0, -1);
-
-    setPast(newPast);
-    setPresent(previous);
-    setFuture(prev => [present, ...prev]);
-  }, [past, present]);
+    setHistory(prev => {
+      if (prev.past.length === 0) return prev;
+      return {
+        past: prev.past.slice(0, -1),
+        present: prev.past[prev.past.length - 1],
+        future: [prev.present, ...prev.future],
+      };
+    });
+  }, []);
 
   const redo = useCallback(() => {
-    if (future.length === 0) return;
-
-    const next = future[0];
-    const newFuture = future.slice(1);
-
-    setPast(prev => [...prev, present]);
-    setPresent(next);
-    setFuture(newFuture);
-  }, [future, present]);
+    setHistory(prev => {
+      if (prev.future.length === 0) return prev;
+      return {
+        past: [...prev.past, prev.present],
+        present: prev.future[0],
+        future: prev.future.slice(1),
+      };
+    });
+  }, []);
 
   const reset = useCallback((newInitial: T) => {
-    setPast([]);
-    setPresent(newInitial);
-    setFuture([]);
+    setHistory({ past: [], present: newInitial, future: [] });
   }, []);
 
   return {
-    state: present,
+    state: history.present,
     set,
     undo,
     redo,
-    canUndo,
-    canRedo,
+    canUndo: history.past.length > 0,
+    canRedo: history.future.length > 0,
     reset,
   };
 }

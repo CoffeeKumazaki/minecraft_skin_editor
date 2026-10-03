@@ -1,6 +1,5 @@
 'use client';
 
-import { Square, Layers } from 'lucide-react';
 import { Layer } from '@/types';
 
 interface LayerToggleProps {
@@ -8,23 +7,25 @@ interface LayerToggleProps {
   setSelectedLayer: (layer: Layer) => void;
 }
 
+const LAYERS: { id: Layer; label: string; title: string }[] = [
+  { id: 'inner', label: 'inner', title: 'Inner layer (base skin)' },
+  { id: 'outer', label: 'outer', title: 'Outer layer (hat / jacket)' },
+];
+
 export function LayerToggle({ selectedLayer, setSelectedLayer }: LayerToggleProps) {
   return (
-    <div className="layer-toggle">
-      <button
-        className={`layer-btn ${selectedLayer === 'inner' ? 'active' : ''}`}
-        onClick={() => setSelectedLayer('inner')}
-        title="Inner Layer"
-      >
-        <Square size={14} /> Inner
-      </button>
-      <button
-        className={`layer-btn ${selectedLayer === 'outer' ? 'active' : ''}`}
-        onClick={() => setSelectedLayer('outer')}
-        title="Outer Layer"
-      >
-        <Layers size={14} /> Outer
-      </button>
+    <div className="segmented">
+      {LAYERS.map(({ id, label, title }) => (
+        <button
+          key={id}
+          className={`segment ${selectedLayer === id ? 'active' : ''}`}
+          onClick={() => setSelectedLayer(id)}
+          title={title}
+          aria-pressed={selectedLayer === id}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   );
 }
