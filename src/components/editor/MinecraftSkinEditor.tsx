@@ -5,7 +5,6 @@ import { Download, Upload, Undo2, Redo2, Grid3x3 } from 'lucide-react';
 import { getBodyParts } from '@/constants/bodyParts';
 import { SKIN_WIDTH } from '@/constants/skin';
 import { createDefaultSkin } from '@/utils/skinInitializer';
-import { colorToHex } from '@/utils/colorUtils';
 import { downloadSkin } from '@/utils/exportSkin';
 import { importSkin } from '@/utils/importSkin';
 import { Color, BodyPartKey, Tool, Layer, ModelType } from '@/types';
@@ -236,26 +235,19 @@ export function MinecraftSkinEditor() {
       </header>
 
       <div className="editor-body">
-        {/* Tool Rail */}
-        <aside className="tool-rail">
-          <ToolPanel tool={tool} setTool={setTool} />
-          <div className="rail-sep" />
-          <button
-            className="rail-swatch primary"
-            onClick={swapColors}
-            title="Primary color (click or X to swap)"
-            aria-label="Swap colors"
-          >
-            <span style={{ background: colorToHex(selectedColor) }} />
-          </button>
-          <button
-            className="rail-swatch"
-            onClick={swapColors}
-            title="Secondary color (click or X to swap)"
-            aria-label="Swap colors"
-          >
-            <span style={{ background: colorToHex(secondaryColor) }} />
-          </button>
+        {/* Left Column: tools + color */}
+        <aside className="left-column">
+          <div className="tool-rail">
+            <ToolPanel tool={tool} setTool={setTool} />
+          </div>
+          <ColorCard
+            selectedColor={selectedColor}
+            setSelectedColor={setSelectedColor}
+            secondaryColor={secondaryColor}
+            setSecondaryColor={setSecondaryColor}
+            onSwap={swapColors}
+            colorHistory={colorHistory}
+          />
         </aside>
 
         {/* Canvas */}
@@ -338,15 +330,6 @@ export function MinecraftSkinEditor() {
             setAutoRotate={setAutoRotate}
             selectedPart={selectedPart}
             modelType={modelType}
-          />
-
-          <ColorCard
-            selectedColor={selectedColor}
-            setSelectedColor={setSelectedColor}
-            secondaryColor={secondaryColor}
-            setSecondaryColor={setSecondaryColor}
-            onSwap={swapColors}
-            colorHistory={colorHistory}
           />
 
           <div className="toggle-row">

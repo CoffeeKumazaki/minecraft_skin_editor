@@ -14,9 +14,8 @@ interface SkinPreview3DProps {
   modelType: ModelType;
 }
 
-// Fits the 350px sidebar card (inner width 308px)
-const PREVIEW_WIDTH = 308;
-const PREVIEW_HEIGHT = 170;
+// Used until the viewport has a measured size (it flexes to fill the sidebar)
+const FALLBACK_SIZE = { width: 308, height: 170 };
 const DEFAULT_ROTATION = { x: 0.2, y: 0 };
 
 const PART_TO_INDEX: Record<BodyPartKey, number> = {
@@ -52,6 +51,23 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     autoRotateRef.current = autoRotate;
   }, [autoRotate]);
 
+  // Keep the renderer matched to the flexible viewport size
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      const renderer = rendererRef.current;
+      const camera = sceneRef.current?.camera;
+      if (!renderer || !camera || width === 0 || height === 0) return;
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -61,14 +77,16 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
     }
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, PREVIEW_WIDTH / PREVIEW_HEIGHT, 0.1, 1000);
+    const width = containerRef.current.clientWidth || FALLBACK_SIZE.width;
+    const height = containerRef.current.clientHeight || FALLBACK_SIZE.height;
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
     camera.position.z = 50;
     camera.position.y = 5;
 
     // Transparent background so the CSS viewport gradient shows through
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(PREVIEW_WIDTH, PREVIEW_HEIGHT);
+    renderer.setSize(width, height);
     containerRef.current.appendChild(renderer.domElement);
     // Save reference to THIS renderer to check in cleanup
     const currentRenderer = renderer;
@@ -501,7 +519,7 @@ export function SkinPreview3D({ skinData, autoRotate, setAutoRotate, selectedPar
   }, [selectedPart]);
 
   return (
-    <section className="card accent">
+    <section className="card accent preview-card">
       <div className="card-header">
         <span className="card-title">Live 3D</span>
         <div className="preview-tools">

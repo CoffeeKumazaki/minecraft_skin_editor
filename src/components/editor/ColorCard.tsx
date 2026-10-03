@@ -116,7 +116,7 @@ export function ColorCard({
       </div>
 
       {colorHistory.length > 0 && (
-        <div>
+        <div className="recent-row">
           <span className="chip-row-label">recent</span>
           <div className="chip-row">
             {colorHistory.slice(0, 8).map((color, i) => chip(colorToHex(color), i, color))}

@@ -8,13 +8,13 @@ interface BodyPartSelectorProps {
   setSelectedPart: (part: BodyPartKey) => void;
 }
 
-// Two columns: character's right side first (as seen from the front)
+// Three columns: head / arms / legs read top-to-bottom
 const PART_TAGS: { key: BodyPartKey; label: string }[] = [
   { key: 'head', label: 'head' },
-  { key: 'body', label: 'body' },
   { key: 'rightArm', label: 'r.arm' },
-  { key: 'leftArm', label: 'l.arm' },
   { key: 'rightLeg', label: 'r.leg' },
+  { key: 'body', label: 'body' },
+  { key: 'leftArm', label: 'l.arm' },
   { key: 'leftLeg', label: 'l.leg' },
 ];
 

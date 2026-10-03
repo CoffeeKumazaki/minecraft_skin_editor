@@ -11,10 +11,10 @@ interface HSVColorPickerProps {
   aside?: React.ReactNode;
 }
 
-// Sized for the 350px sidebar color card (canvas sizes exclude the 2px CSS border)
+// Sized for the 300px left-column color card (canvas sizes exclude the 2px CSS border)
 const SV_WIDTH = 150;
 const SV_HEIGHT = 90;
-const HUE_WIDTH = 304;
+const HUE_WIDTH = 258;
 const HUE_HEIGHT = 12;
 
 export function HSVColorPicker({ color, onChange, aside }: HSVColorPickerProps) {
